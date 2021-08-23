@@ -5,7 +5,11 @@ import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.StorageProviderInterface;
 import de.sub.goobi.persistence.managers.RulesetManager;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,6 +79,14 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         return "/uii/plugin_administration_ruleset_edition.xhtml";
     }
 
+    public String getCurrentEditorTitle() {
+        if (this.currentRuleset != null) {
+            return this.currentRuleset.getTitel() + " - " + this.currentRuleset.getDatei();
+        } else {
+            return "";
+        }
+    }
+
     public void initRulesetDates() {
         this.rulesetDates = new ArrayList<>();
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
@@ -101,23 +113,39 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         }
     }
 
+    public void setCurrentRulesetIndex(int index) {
+        log.error("Set ruleset index");
+        this.setRuleset(index);
+    }
+
     public Ruleset getCurrentRuleset() {
         return this.currentRuleset;
     }
 
+    public void setCurrentRulesetFileContent(String content) {
+        this.currentRulesetFileContent = content;
+    }
+
     public void editRuleset(int index) {
         this.setRuleset(index);
-        log.error("Edit: " + this.currentRulesetIndex);
+        List<String> lines = this.readFile(RULESET_DIRECTORY + this.currentRuleset.getDatei());
+        this.currentRulesetFileContent = this.concatenateStrings(lines, "\n");
     }
 
     public void save() {
+        File file = new File(RULESET_DIRECTORY + this.currentRuleset.getDatei());
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(this.currentRulesetFileContent);
+            writer.close();
+        } catch (IOException ioException) {
+            log.error("Could not write file " + file.getAbsoluteFile().getAbsolutePath());
+        }
         this.setRuleset(-1);
-        log.error("Save");
     }
 
     public void cancel() {
         this.setRuleset(-1);
-        log.error("Cancel");
     }
 
     private void setRuleset(int index) {
@@ -130,6 +158,25 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             this.currentRuleset = null;
             this.currentRulesetFileContent = null;
         }
+    }
+
+    public List<String> readFile(String fileName) {
+        try {
+            return Files.readAllLines(Paths.get(fileName));
+        } catch (IOException ioException) {
+            return new ArrayList<>();
+        }
+    }
+
+    public String concatenateStrings(List<String> strings, String connector) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int index = 0; index < strings.size(); index++) {
+            stringBuffer.append(strings.get(index));
+            if (index < strings.size() - 1) {
+                stringBuffer.append(connector);
+            }
+        }
+        return stringBuffer.toString();
     }
 
 }

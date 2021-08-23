@@ -1,19 +1,22 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
 	xmlns:composite="http://xmlns.jcp.org/jsf/composite"
-	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:jsf="http://xmlns.jcp.org/jsf"
 	xmlns:f="http://xmlns.jcp.org/jsf/core"
-	xmlns:x="http://myfaces.apache.org/tomahawk"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
 	xmlns:intranda="http://xmlns.jcp.org/jsf/composite/composites"
+	xmlns:jsf="http://xmlns.jcp.org/jsf"
+	xmlns:p="http://primefaces.org/ui"
 	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
-	xmlns:p="http://primefaces.org/ui">
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:x="http://myfaces.apache.org/tomahawk">
 
 	<composite:interface>
 	</composite:interface>
 
 	<composite:implementation>
-
+		<link rel="stylesheet" href="template/css/codemirror/codemirror.css?v=#{HelperForm.buildVersion}"/>
+		<script type="text/javascript" src="template/js/codemirror/codemirror.js?v=#{HelperForm.buildVersion}"/>
+		<script src="template/js/codemirror/mode/xml/xml.js?v=#{HelperForm.buildVersion}"/>
 		<!-- Without permission -->
 		<h:panelGroup rendered="#{!LoginForm.hasRole('Plugin_administration_ruleset_edition')}">
 			<div class="row">
@@ -39,101 +42,107 @@
 		<!-- With permission -->
 		<h:panelGroup rendered="#{LoginForm.hasRole('Plugin_administration_ruleset_edition')}">
 			<h:form id="rulesetEditorForm">
-				<div class="col-sm-4">
-					<div class="col-sm-12">
-						<div class="box box-color box-bordered">
-							<div class="box-title">
-								<h3>
-									<i class="fa fa-files-o"></i>
-									<h:outputText
-										value="#{msgs.rulesetSelection}" />
-								</h3>
-							</div>
-							<div class="box-content">
-								<!-- Table with rule set file -->
-								<h:dataTable id="ruleset_table" styleClass="table table-hover table-nomargin dataTable table-bordered responsive" var="item"
-									value="#{AdministrationForm.administrationPlugin.rulesets}" varStatus="status">
-									<h:column>
-										<f:facet name="header">
-											<h:outputText value="#{msgs.rulesetTitle}" />
-										</f:facet>
-										<h:outputText value="#{item.titel}"/>
-									</h:column>
-									<h:column>
-										<f:facet name="header">
-											<h:outputText value="#{msgs.rulesetFile}" />
-										</f:facet>
-										<h:outputText value="#{item.datei}" />
-									</h:column>
-									<h:column>
-										<f:facet name="header">
-											<h:outputText value="#{msgs.zuletztBearbeitet}" />
-										</f:facet>
-										<h:outputText value="#{AdministrationForm.administrationPlugin.rulesetDates.get(status.index)}" />
-									</h:column>
-									<h:column>
-										<f:facet name="header">
-											<h:outputText value="#{msgs.auswahl}" />
-										</f:facet>
-										<!-- Edit-Ruleset-Button -->
-										<button
-											jsf:id="edit"
-											class="btn margin-sides-5"
-											jsf:rel="tooltip"
-											jsf:action="#{AdministrationForm.administrationPlugin.editRuleset(status.index)}"
-											title="#{msgs.regelsatzBearbeiten}">
-											<i class="fa fa-pencil"></i>
-											<f:ajax render="rulesetEditorForm" />
-										</button>
-									</h:column>
-								</h:dataTable>
-							</div>
+				<div class="col-sm-4" style="padding-left: 0px !important;">
+					<div class="box box-color box-bordered">
+						<div class="box-title">
+							<h3>
+								<i class="fa fa-files-o"></i>
+								<h:outputText value="#{msgs.rulesetSelection}" />
+							</h3>
+						</div>
+						<div class="box-content">
+							<!-- Table with rule set file -->
+							<h:dataTable id="ruleset_table" styleClass="table table-hover table-nomargin dataTable table-bordered responsive" var="item"
+								value="#{AdministrationForm.administrationPlugin.rulesets}" varStatus="status">
+								<h:column>
+									<f:facet name="header">
+										<h:outputText value="#{msgs.rulesetTitle}" />
+									</f:facet>
+									<h:outputText value="#{item.titel}"/>
+								</h:column>
+								<h:column>
+									<f:facet name="header">
+										<h:outputText value="#{msgs.rulesetFile}" />
+									</f:facet>
+									<h:outputText value="#{item.datei}" />
+								</h:column>
+								<h:column>
+									<f:facet name="header">
+										<h:outputText value="#{msgs.zuletztBearbeitet}" />
+									</f:facet>
+									<h:outputText value="#{AdministrationForm.administrationPlugin.rulesetDates.get(status.index)}" />
+								</h:column>
+								<h:column>
+									<f:facet name="header">
+										<h:outputText value="#{msgs.auswahl}" />
+									</f:facet>
+									<!-- Edit-Ruleset-Button -->
+									<button
+										jsf:id="edit"
+										class="btn margin-sides-5"
+										jsf:rel="tooltip"
+										jsf:action="#{AdministrationForm.administrationPlugin.editRuleset(status.index)}"
+										jsf:disabled="#{AdministrationForm.administrationPlugin.currentRuleset == null ? false : true}"
+										title="#{msgs.regelsatzBearbeiten}">
+										<i class="fa fa-pencil"></i>
+										<f:ajax render="rulesetEditorForm" />
+									</button>
+								</h:column>
+							</h:dataTable>
 						</div>
 					</div>
-					<div class="col-sm-12">
-						<div class="box box-color box-bordered lightgrey">
-							<div class="box-title">
-								<h3>
-									<i class="fa fa-bar-chart"></i>
-									<h:outputText
-										value="#{msgs.validationResult}" />
-								</h3>
-							</div>
-							<div class="box-content">
-								<h:panelGroup id="actionform" styleClass="col-sm-12">
-									<div class="row">
-										<h:form>
-											hello adminstration plugin: #{AdministrationForm.administrationPlugin.value}
-										</h:form>
-									</div>
-								</h:panelGroup>
-							</div>
+					<div class="box box-color box-bordered lightgrey">
+						<div class="box-title">
+							<h3>
+								<i class="fa fa-bar-chart"></i>
+								<h:outputText
+									value="#{msgs.validationResult}" />
+							</h3>
+						</div>
+						<div class="box-content">
+							<h:panelGroup id="actionform" styleClass="col-sm-12">
+								<div class="row">
+									hello adminstration plugin: #{AdministrationForm.administrationPlugin.value}
+								</div>
+							</h:panelGroup>
 						</div>
 					</div>
 				</div>
-				<div class="col-sm-8">
+				<div class="col-sm-8" style="padding-right: 0px !important;">
 					<div class="box box-color box-bordered orange">
 						<div class="box-title">
 							<h3>
 								<i class="fa fa-wrench"></i>
-								<h:outputText
-									value="#{AdministrationForm.administrationPlugin.currentRuleset.titel} - #{AdministrationForm.administrationPlugin.currentRuleset.datei}" />
+								<h:outputText value="#{AdministrationForm.administrationPlugin.currentEditorTitle}" />
 							</h3>
 						</div>
 						<div class="box-content">
-							<x:inputTextarea
-								id="rulesetEditor"
-								pt:aria-label="rulesetEditor"
-								forceId="true"
-								styleClass="form-control"
-								value="#{AdministrationForm.administrationPlugin.currentRulesetFileContent}" />
+							<h:panelGroup
+								rendered="#{AdministrationForm.administrationPlugin.currentRuleset != null}"
+								style="display: block; border: 1px solid #ddd">
+								<x:inputTextarea
+									id="rulesetEditor"
+									style="resize: none;"
+									pt:aria-label="rulesetEditor"
+									forceId="true"
+									styleClass="form-control"
+									value="#{AdministrationForm.administrationPlugin.currentRulesetFileContent}" />
+								<script type="text/javascript">
+									initRulesetEditor();
+								</script>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{AdministrationForm.administrationPlugin.currentRuleset == null}">
+								<h:outputText styleClass="alert alert-info alert-dismissable margin-bottom-10 margin-top-10 margin-left-10 margin-right-10" value="#{msgs.noFileSelected}" />
+							</h:panelGroup>
 							<div class="form-actions">
 								<!-- Save-Button -->
 								<button
 									jsf:id="save"
 									class="btn btn-success pull-right font-size-s margin-bottom-most"
 									jsf:action="#{AdministrationForm.administrationPlugin.save}"
-									title="#{msgs.uebernehmen}">
+									onclick="loadEditorContent()"
+									title="#{msgs.uebernehmen}"
+									jsf:disabled="#{AdministrationForm.administrationPlugin.currentRuleset == null ? true : false}">
 									<i class="fa fa-save margin-right-5"></i>
 									<h:outputText value="#{msgs.uebernehmen}" />
 									<f:ajax render="rulesetEditorForm" />
@@ -143,7 +152,8 @@
 									jsf:id="cancel"
 									class="btn margin-sides-10 font-size-s pull-right"
 									jsf:action="#{AdministrationForm.administrationPlugin.cancel}"
-									title="#{msgs.cancel}">
+									title="#{msgs.cancel}"
+									jsf:disabled="#{AdministrationForm.administrationPlugin.currentRuleset == null ? true : false}">
 									<h:outputText value="#{msgs.cancel}" />
 									<f:ajax render="rulesetEditorForm" />
 								</button>
@@ -153,6 +163,29 @@
 				</div>
 			</h:form>
 		</h:panelGroup>
-
+		<script type="text/javascript">
+			/*
+			window.onload = function() {
+				initRulesetEditor();
+			}
+			*/
+			var rulesetEditor;
+			function initRulesetEditor() {
+				var rulesetTextArea = document.getElementById("rulesetEditor");
+				if (rulesetTextArea) {
+					rulesetEditor = CodeMirror.fromTextArea(rulesetTextArea, {
+						lineNumbers: true,
+						mode: 'xml'
+					});
+					rulesetEditor.on('change', editor => {
+						document.getElementById("rulesetEditor").innerHTML = editor.getValue();
+					});
+				}
+			}
+			function loadEditorContent() {
+				var rulesetTextArea = document.getElementById("rulesetEditor");
+				rulesetTextArea.innerHTML = rulesetEditor.getValue();
+			}
+		</script>
 	</composite:implementation>
 </ui:composition>
