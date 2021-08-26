@@ -5,14 +5,13 @@ import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.StorageProviderInterface;
 import de.sub.goobi.persistence.managers.RulesetManager;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
@@ -20,6 +19,8 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+
+import org.apache.commons.configuration.XMLConfiguration;
 
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
@@ -29,33 +30,32 @@ import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
 @Log4j2
 public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin {
 
+    private final String RULESET_DIRECTORY;
+
+    private final String BACKUP_DIRECTORY;
+
     @Getter
     private String title = "intranda_administration_ruleset_edition";
-
-    private static final String RULESET_DIRECTORY = "/opt/digiverso/goobi/rulesets/";
-
-    private static final String BACKUP_DIRECTORY = RULESET_DIRECTORY + "backup/";
-
-    @Getter
-    private String value;
 
     private List<Ruleset> rulesets;
 
     /**
      * -1 means that no ruleset is selected
      */
+    @Getter
     private int currentRulesetIndex = -1;
 
     /**
      * null means that no ruleset is selected
      */
+    @Getter
     private Ruleset currentRuleset = null;
 
     /**
      * null means that no ruleset is selected
      */
-    @Getter
     @Setter
+    @Getter
     private String currentRulesetFileContent = null;
 
     @Getter
@@ -65,8 +65,9 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
      * Constructor
      */
     public RulesetEditionAdministrationPlugin() {
-        log.info("Sample admnistration plugin started");
-        value = ConfigPlugins.getPluginConfig(title).getString("value", "default value");
+        XMLConfiguration configuration = ConfigPlugins.getPluginConfig(this.title);
+        this.RULESET_DIRECTORY = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
+        this.BACKUP_DIRECTORY = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
     }
 
     @Override
@@ -92,7 +93,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
-                long lastModified = storageProvider.getLastModifiedDate(Paths.get(RULESET_DIRECTORY + this.rulesets.get(index).getDatei()));
+                long lastModified = storageProvider.getLastModifiedDate(Paths.get(this.RULESET_DIRECTORY + this.rulesets.get(index).getDatei()));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
             } catch (IOException ioException) {
@@ -114,33 +115,34 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     public void setCurrentRulesetIndex(int index) {
-        log.error("Set ruleset index");
         this.setRuleset(index);
     }
 
-    public Ruleset getCurrentRuleset() {
-        return this.currentRuleset;
+    public String getCurrentRulesetFileName() {
+        return this.RULESET_DIRECTORY + this.currentRuleset.getDatei();
     }
 
-    public void setCurrentRulesetFileContent(String content) {
-        this.currentRulesetFileContent = content;
+    public boolean isActiveRuleset(Ruleset ruleset) {
+        return this.findRulesetIndex(ruleset) == this.currentRulesetIndex;
     }
 
-    public void editRuleset(int index) {
+    public void editRuleset(Ruleset ruleset) {
+        int index = this.findRulesetIndex(ruleset);
         this.setRuleset(index);
-        List<String> lines = this.readFile(RULESET_DIRECTORY + this.currentRuleset.getDatei());
-        this.currentRulesetFileContent = this.concatenateStrings(lines, "\n");
+    }
+
+    public int findRulesetIndex(Ruleset ruleset) {
+        for (int index = 0; index < this.rulesets.size(); index++) {
+            if (ruleset == this.rulesets.get(index)) {
+                return index;
+            }
+        }
+        return -1;
     }
 
     public void save() {
-        File file = new File(RULESET_DIRECTORY + this.currentRuleset.getDatei());
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            writer.write(this.currentRulesetFileContent);
-            writer.close();
-        } catch (IOException ioException) {
-            log.error("Could not write file " + file.getAbsoluteFile().getAbsolutePath());
-        }
+        this.createBackupFile();
+        this.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         this.setRuleset(-1);
     }
 
@@ -152,7 +154,8 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         if (index >= 0 && index < this.rulesets.size()) {
             this.currentRulesetIndex = index;
             this.currentRuleset = this.rulesets.get(index);
-            this.currentRulesetFileContent = this.currentRuleset.getDatei();
+            List<String> lines = this.readFile(this.getCurrentRulesetFileName());
+            this.currentRulesetFileContent = this.concatenateStrings(lines, "\n");
         } else {
             this.currentRulesetIndex = -1;
             this.currentRuleset = null;
@@ -160,11 +163,57 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         }
     }
 
+    public void createBackupFile() {
+        List<String> lines = this.readFile(this.getCurrentRulesetFileName());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+        String fileName = this.BACKUP_DIRECTORY + "backup_" + formatter.format(new Date()) + "_" + this.currentRuleset.getDatei();
+        String content = this.concatenateStrings(lines, "\n");
+        this.writeFile(fileName, content);
+        log.error("Wrote backup file: " + fileName);
+    }
+
     public List<String> readFile(String fileName) {
+        Path path = Paths.get(fileName);
         try {
-            return Files.readAllLines(Paths.get(fileName));
+            return Files.readAllLines(path);
         } catch (IOException ioException) {
+            log.error("RulesetEditionAdministrationPlugin could not read file " + fileName);
             return new ArrayList<>();
+        }
+    }
+
+    public void writeFile(String fileName, String content) {
+        if (!Paths.get(this.BACKUP_DIRECTORY).toFile().exists()) {
+            this.createDirectory(this.BACKUP_DIRECTORY);
+        }
+        if (!Paths.get(fileName).toFile().exists()) {
+            this.createFile(fileName);
+        }
+        try {
+            Files.write(Paths.get(fileName), content.getBytes());
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            log.error("RulesetEditionAdministrationPlugin could not write file " + fileName);
+        }
+    }
+
+    public void createFile(String fileName) {
+        Path path = Paths.get(fileName);
+        try {
+            StorageProvider.getInstance().createFile(path);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            log.error("RulesetEditionAdministrationPlugin could not create file " + fileName);
+        }
+    }
+
+    public void createDirectory(String directoryName) {
+        Path path = Paths.get(directoryName);
+        try {
+            StorageProvider.getInstance().createDirectories(path);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            log.error("RulesetEditionAdministrationPlugin could not create directory " + directoryName);
         }
     }
 

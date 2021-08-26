@@ -1,6 +1,7 @@
 <config_plugin>
 	
-	<!-- configuration item as sample -->
-	<value>sample value from config</value>
+	<rulesetDirectory>/opt/digiverso/goobi/rulesets/</rulesetDirectory>
+	<!-- By editing a ruleset file in the browser GUI, a backup file will be stored in the backup directory -->
+	<rulesetBackupDirectory>/opt/digiverso/goobi/rulesets/backup/</rulesetBackupDirectory>
 	
 </config_plugin>
