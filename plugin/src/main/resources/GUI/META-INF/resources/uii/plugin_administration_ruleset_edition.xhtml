@@ -118,23 +118,12 @@
 										<h:outputText value="#{AdministrationForm.administrationPlugin.currentEditorTitle}" />
 									</h3>
 								</div>
-								<div class="box-content">
-									<h:panelGroup style="display: block; border: 1px solid #ddd">
-										<x:inputTextarea
-											id="rulesetEditor"
-											style="resize: none;"
-											pt:aria-label="rulesetEditor"
-											forceId="true"
-											styleClass="form-control"
-											value="#{AdministrationForm.administrationPlugin.currentRulesetFileContent}" />
-										<script type="text/javascript">
-											initRulesetEditor();
-										</script>
-									</h:panelGroup>
+								<div class="box-content" id="boxUntilBottom">
+									<!-- Buttons on top of text editor -->
 									<div class="form-actions">
 										<!-- Save-Button -->
 										<button
-											jsf:id="save"
+											jsf:id="save-top"
 											class="btn btn-success pull-right font-size-s margin-bottom-most"
 											jsf:action="#{AdministrationForm.administrationPlugin.save}"
 											onclick="loadEditorContent()"
@@ -145,7 +134,43 @@
 										</button>
 										<!-- Cancel-Button -->
 										<button
-											jsf:id="cancel"
+											jsf:id="cancel-top"
+											class="btn margin-sides-10 font-size-s pull-right"
+											jsf:action="#{AdministrationForm.administrationPlugin.cancel}"
+											title="#{msgs.cancel}">
+											<h:outputText value="#{msgs.cancel}" />
+											<f:ajax render="rulesetEditorForm" />
+										</button>
+									</div>
+									<!-- Text editor -->
+									<div id="rulesetEditorBorder" style="border: 1px solid #ddd; margin-top: 28px;">
+										<x:inputTextarea
+											id="rulesetEditor"
+											style="resize: none;"
+											pt:aria-label="rulesetEditor"
+											forceId="true"
+											styleClass="form-control"
+											value="#{AdministrationForm.administrationPlugin.currentRulesetFileContent}" />
+										<script type="text/javascript">
+											initRulesetEditor();
+										</script>
+									</div>
+									<!-- Buttons on bottom of text editor -->
+									<div class="form-actions">
+										<!-- Save-Button -->
+										<button
+											jsf:id="save-bottom"
+											class="btn btn-success pull-right font-size-s margin-bottom-most"
+											jsf:action="#{AdministrationForm.administrationPlugin.save}"
+											onclick="loadEditorContent()"
+											title="#{msgs.uebernehmen}">
+											<i class="fa fa-save margin-right-5"></i>
+											<h:outputText value="#{msgs.uebernehmen}" />
+											<f:ajax render="rulesetEditorForm" />
+										</button>
+										<!-- Cancel-Button -->
+										<button
+											jsf:id="cancel-bottom"
 											class="btn margin-sides-10 font-size-s pull-right"
 											jsf:action="#{AdministrationForm.administrationPlugin.cancel}"
 											title="#{msgs.cancel}">
@@ -177,11 +202,6 @@
 			</div>
 		</h:panelGroup>
 		<script type="text/javascript">
-			/*
-			window.onload = function() {
-				initRulesetEditor();
-			}
-			*/
 			var rulesetEditor;
 			function initRulesetEditor() {
 				var rulesetTextArea = document.getElementById("rulesetEditor");
@@ -194,10 +214,29 @@
 						document.getElementById("rulesetEditor").innerHTML = editor.getValue();
 					});
 				}
+				window.addEventListener('resize', function() {
+					setHeightOfTextEditor();
+				});
+				setHeightOfTextEditor();
 			}
 			function loadEditorContent() {
 				var rulesetTextArea = document.getElementById("rulesetEditor");
 				rulesetTextArea.innerHTML = rulesetEditor.getValue();
+			}
+			function setHeightOfTextEditor() {
+				var documentHeight = document.body.clientHeight;
+				var offset = $("#boxUntilBottom").offset();
+				var xPosition = offset.left - $(window).scrollLeft();
+				var yPosition = offset.top - $(window).scrollTop();
+				var border = 20;
+				var resultHeight = documentHeight - yPosition - border;
+				var box = document.getElementById("boxUntilBottom");
+				box.style.height = resultHeight + "px";
+				var codeMirror = document.getElementsByClassName("CodeMirror")[0];
+				codeMirror.style.height = "100%";
+				var borderBox = document.getElementById("rulesetEditorBorder");
+				// 150 is an estimated height of buttons and spaces
+				borderBox.style.height = (resultHeight - 150) + "px";
 			}
 		</script>
 	</composite:implementation>

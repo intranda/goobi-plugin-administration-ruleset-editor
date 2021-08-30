@@ -34,6 +34,8 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     private final String BACKUP_DIRECTORY;
 
+    private final int NUMBER_OF_BACKUP_FILES;
+
     @Getter
     private String title = "intranda_administration_ruleset_edition";
 
@@ -68,6 +70,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         XMLConfiguration configuration = ConfigPlugins.getPluginConfig(this.title);
         this.RULESET_DIRECTORY = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
         this.BACKUP_DIRECTORY = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
+        this.NUMBER_OF_BACKUP_FILES = configuration.getInt("numberOfBackupFiles", 10);
     }
 
     @Override
@@ -140,8 +143,21 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         return -1;
     }
 
+    // TODO: This method does not work because the stored file and the first backup are compared.
+    // TODO: The currentRulesetFileContent must be compared with the current file content to get this working
     public void save() {
-        this.createBackupFile();
+        // Only create a backup if backup file does not exist or file content differs from the first backup file
+        StorageProviderInterface storage = StorageProvider.getInstance();
+        String firstBackupFileName = this.combineBackupFileName(this.currentRuleset.getDatei(), 1);
+        if (storage.isFileExists(Paths.get(firstBackupFileName))) {
+            List<String> linesInFile = this.readFile(this.getCurrentRulesetFileName());
+            List<String> linesInBackupFile = this.readFile(firstBackupFileName);
+            if (!linesInFile.equals(linesInBackupFile)) {
+                this.createBackupFile();
+            }
+        } else {
+            this.createBackupFile();
+        }
         this.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         this.setRuleset(-1);
     }
@@ -163,13 +179,54 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         }
     }
 
+    /**
+     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1".
+     * The oldest file (e.g. "fileName.xml.10") will be removed
+     *
+     * How the algorithm works (e.g. this.NUMBER_OF_BACKUP_FILES == 10):
+     *
+     * delete(backup/fileName.xml.10)
+     * rename(backup/fileName.xml.9, backup/fileName.xml.10)
+     * rename(backup/fileName.xml.8, backup/fileName.xml.9)
+     *...
+     * rename(backup/fileName.xml.2, backup/fileName.xml.3)
+     * rename(backup/fileName.xml.1, backup/fileName.xml.2)
+     * copy(fileName.xml, backup/fileName.xml.1)
+     */
     public void createBackupFile() {
-        List<String> lines = this.readFile(this.getCurrentRulesetFileName());
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-        String fileName = this.BACKUP_DIRECTORY + "backup_" + formatter.format(new Date()) + "_" + this.currentRuleset.getDatei();
-        String content = this.concatenateStrings(lines, "\n");
-        this.writeFile(fileName, content);
-        log.error("Wrote backup file: " + fileName);
+        String fileName = this.currentRuleset.getDatei();
+        StorageProviderInterface storage = StorageProvider.getInstance();
+        try {
+            // Delete oldest file when existing...
+            String lastFileName = this.combineBackupFileName(fileName, this.NUMBER_OF_BACKUP_FILES);
+            Path lastFile = Paths.get(lastFileName);
+            if (storage.isFileExists(lastFile)) {
+                storage.deleteFile(lastFile);
+            }
+            // Rename all other backup files...
+            // This is the number of the file that should be renamed to the file with the higher number
+            int backupId = this.NUMBER_OF_BACKUP_FILES - 1;
+            while (backupId > 0) {
+                String newerFileName = this.combineBackupFileName(fileName, backupId);
+                String olderFileName = this.combineBackupFileName(fileName, backupId + 1);
+                Path newerFile = Paths.get(newerFileName);
+                if (storage.isFileExists(newerFile)) {
+                    storage.renameTo(newerFile, olderFileName);
+                }
+                backupId--;
+            }
+            // Create backup file...
+            List<String> lines = this.readFile(this.RULESET_DIRECTORY + fileName);
+            String content = this.concatenateStrings(lines, "\n");
+            this.writeFile(this.combineBackupFileName(fileName, 1), content);
+            log.info("Wrote backup file: " + fileName);
+        } catch (IOException ioException) {
+            log.error(ioException);
+        }
+    }
+
+    private String combineBackupFileName(String fileName, int backupId) {
+        return this.BACKUP_DIRECTORY + fileName + "." + backupId;
     }
 
     public List<String> readFile(String fileName) {
