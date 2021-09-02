@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.Getter;
@@ -143,23 +143,36 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         return -1;
     }
 
-    // TODO: This method does not work because the stored file and the first backup are compared.
-    // TODO: The currentRulesetFileContent must be compared with the current file content to get this working
     public void save() {
-        // Only create a backup if backup file does not exist or file content differs from the first backup file
-        StorageProviderInterface storage = StorageProvider.getInstance();
-        String firstBackupFileName = this.combineBackupFileName(this.currentRuleset.getDatei(), 1);
-        if (storage.isFileExists(Paths.get(firstBackupFileName))) {
-            List<String> linesInFile = this.readFile(this.getCurrentRulesetFileName());
-            List<String> linesInBackupFile = this.readFile(firstBackupFileName);
-            if (!linesInFile.equals(linesInBackupFile)) {
-                this.createBackupFile();
-            }
-        } else {
+        // Only create a backup if the new file content differs from the existing file content
+        if (this.hasFileContentChanged()) {
             this.createBackupFile();
         }
         this.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         this.setRuleset(-1);
+    }
+
+    private boolean hasFileContentChanged() {
+        List<String> oldLines = this.addLinebreakToEachLine(this.readFile(this.getCurrentRulesetFileName()));
+        List<String> newLines = Arrays.asList(this.currentRulesetFileContent.split("\n"));
+        return !this.isContentEqual(oldLines, newLines);
+    }
+
+    public boolean isContentEqual(List<String> first, List<String> second) {
+        if (first.size() != second.size()) {
+            return false;
+        }
+        for (int index = 0; index < first.size(); index++) {
+            String string1 = first.get(index);
+            String string2 = second.get(index);
+            int length1 = first.get(index).length();
+            int length2 = second.get(index).length();
+            // It is important to ignore the linebreaks because the first string has \n and the second one has \r
+            if (!(string1.substring(0, length1 - 1).equals(string2.substring(0, length2 - 1)))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void cancel() {
@@ -283,6 +296,15 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             }
         }
         return stringBuffer.toString();
+    }
+
+    public List<String> addLinebreakToEachLine(List<String> lines) {
+        for (int index = 0; index < lines.size(); index++) {
+            if (index < lines.size() - 1) {
+                lines.set(index, lines.get(index) + "\n");
+            }
+        }
+        return lines;
     }
 
 }

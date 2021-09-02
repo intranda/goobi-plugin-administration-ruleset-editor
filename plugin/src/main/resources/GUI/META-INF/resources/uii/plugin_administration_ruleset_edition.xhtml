@@ -92,6 +92,7 @@
 								</h:dataTable>
 							</div>
 						</div>
+						<!--
 						<div class="box box-color box-bordered lightgrey">
 							<div class="box-title">
 								<h3>
@@ -103,11 +104,11 @@
 							<div class="box-content">
 								<h:panelGroup id="actionform" styleClass="col-sm-12">
 									<div class="row">
-										<!-- hello adminstration plugin: #{AdministrationForm.administrationPlugin.value} -->
 									</div>
 								</h:panelGroup>
 							</div>
 						</div>
+						-->
 					</div>
 					<div class="col-sm-8">
 						<h:panelGroup rendered="#{AdministrationForm.administrationPlugin.currentRuleset != null}">
@@ -123,18 +124,18 @@
 									<div class="form-actions">
 										<!-- Save-Button -->
 										<button
-											jsf:id="save-top"
+											jsf:id="save"
 											class="btn btn-success pull-right font-size-s margin-bottom-most"
 											jsf:action="#{AdministrationForm.administrationPlugin.save}"
 											onclick="loadEditorContent()"
 											title="#{msgs.uebernehmen}">
 											<i class="fa fa-save margin-right-5"></i>
-											<h:outputText value="#{msgs.uebernehmen}" />
+											<h:outputText value="#{msgs.save}" />
 											<f:ajax render="rulesetEditorForm" />
 										</button>
 										<!-- Cancel-Button -->
 										<button
-											jsf:id="cancel-top"
+											jsf:id="cancel"
 											class="btn margin-sides-10 font-size-s pull-right"
 											jsf:action="#{AdministrationForm.administrationPlugin.cancel}"
 											title="#{msgs.cancel}">
@@ -154,29 +155,6 @@
 										<script type="text/javascript">
 											initRulesetEditor();
 										</script>
-									</div>
-									<!-- Buttons on bottom of text editor -->
-									<div class="form-actions">
-										<!-- Save-Button -->
-										<button
-											jsf:id="save-bottom"
-											class="btn btn-success pull-right font-size-s margin-bottom-most"
-											jsf:action="#{AdministrationForm.administrationPlugin.save}"
-											onclick="loadEditorContent()"
-											title="#{msgs.uebernehmen}">
-											<i class="fa fa-save margin-right-5"></i>
-											<h:outputText value="#{msgs.uebernehmen}" />
-											<f:ajax render="rulesetEditorForm" />
-										</button>
-										<!-- Cancel-Button -->
-										<button
-											jsf:id="cancel-bottom"
-											class="btn margin-sides-10 font-size-s pull-right"
-											jsf:action="#{AdministrationForm.administrationPlugin.cancel}"
-											title="#{msgs.cancel}">
-											<h:outputText value="#{msgs.cancel}" />
-											<f:ajax render="rulesetEditorForm" />
-										</button>
 									</div>
 								</div>
 							</div>
@@ -235,8 +213,8 @@
 				var codeMirror = document.getElementsByClassName("CodeMirror")[0];
 				codeMirror.style.height = "100%";
 				var borderBox = document.getElementById("rulesetEditorBorder");
-				// 150 is an estimated height of buttons and spaces
-				borderBox.style.height = (resultHeight - 150) + "px";
+				// 100 is an estimated height of buttons and spaces
+				borderBox.style.height = (resultHeight - 100) + "px";
 			}
 		</script>
 	</composite:implementation>
