@@ -1,6 +1,7 @@
 package de.intranda.goobi.plugins;
 
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.StorageProviderInterface;
 import de.sub.goobi.persistence.managers.RulesetManager;
@@ -149,12 +150,17 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             this.createBackupFile();
         }
         this.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
-        this.setRuleset(-1);
+        // Uncomment this when the file should be closed after saving
+        // this.setRuleset(-1);
+        Helper.setMeldung("rulesetEditor", "Saved successfully", "");
     }
 
     private boolean hasFileContentChanged() {
         List<String> oldLines = this.addLinebreakToEachLine(this.readFile(this.getCurrentRulesetFileName()));
         List<String> newLines = Arrays.asList(this.currentRulesetFileContent.split("\n"));
+        log.error("file  : " + oldLines);
+        log.error("editor: " + newLines);
+        log.error("equal : " + this.isContentEqual(oldLines, newLines));
         return !this.isContentEqual(oldLines, newLines);
     }
 
@@ -167,7 +173,9 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             String string2 = second.get(index);
             int length1 = first.get(index).length();
             int length2 = second.get(index).length();
-            // It is important to ignore the linebreaks because the first string has \n and the second one has \r
+            log.error("length1: " + length1);
+            log.error("length2: " + length2);
+            // -1 is important to ignore the difference between \n and \r in the two lists of lines
             if (!(string1.substring(0, length1 - 1).equals(string2.substring(0, length2 - 1)))) {
                 return false;
             }
@@ -180,12 +188,19 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     private void setRuleset(int index) {
+        // Avoid lost file edition
+        if (index >= 0 && this.currentRulesetIndex >= 0 && this.hasFileContentChanged()) {
+            Helper.setFehlerMeldung("rulesetEditor", "Save old file?", "");
+            return;
+        }
+        // Change the (saved or unchanged) file
         if (index >= 0 && index < this.rulesets.size()) {
             this.currentRulesetIndex = index;
             this.currentRuleset = this.rulesets.get(index);
             List<String> lines = this.readFile(this.getCurrentRulesetFileName());
-            this.currentRulesetFileContent = this.concatenateStrings(lines, "\n");
+            this.currentRulesetFileContent = this.concatenateStrings(lines, "\r");
         } else {
+            // Close the file
             this.currentRulesetIndex = -1;
             this.currentRuleset = null;
             this.currentRulesetFileContent = null;
@@ -230,7 +245,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             }
             // Create backup file...
             List<String> lines = this.readFile(this.RULESET_DIRECTORY + fileName);
-            String content = this.concatenateStrings(lines, "\n");
+            String content = this.concatenateStrings(lines, "\r");
             this.writeFile(this.combineBackupFileName(fileName, 1), content);
             log.info("Wrote backup file: " + fileName);
         } catch (IOException ioException) {
