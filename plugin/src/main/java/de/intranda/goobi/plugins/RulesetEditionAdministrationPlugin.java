@@ -7,17 +7,14 @@ import de.sub.goobi.helper.StorageProviderInterface;
 import de.sub.goobi.persistence.managers.RulesetManager;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import lombok.extern.log4j.Log4j2;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
@@ -27,15 +24,9 @@ import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
 
-@PluginImplementation
 @Log4j2
+@PluginImplementation
 public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin {
-
-    private final String RULESET_DIRECTORY;
-
-    private final String BACKUP_DIRECTORY;
-
-    private final int NUMBER_OF_BACKUP_FILES;
 
     @Getter
     private String title = "intranda_administration_ruleset_edition";
@@ -47,6 +38,11 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
      */
     @Getter
     private int currentRulesetIndex = -1;
+
+    private int rulesetIndexAfterSaveOrIgnore = -1;
+
+    @Getter
+    private boolean rulesetContentChanged = false;
 
     /**
      * null means that no ruleset is selected
@@ -69,9 +65,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
      */
     public RulesetEditionAdministrationPlugin() {
         XMLConfiguration configuration = ConfigPlugins.getPluginConfig(this.title);
-        this.RULESET_DIRECTORY = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
-        this.BACKUP_DIRECTORY = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
-        this.NUMBER_OF_BACKUP_FILES = configuration.getInt("numberOfBackupFiles", 10);
+        RulesetFileUtils.init(configuration);
     }
 
     @Override
@@ -97,7 +91,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
-                long lastModified = storageProvider.getLastModifiedDate(Paths.get(this.RULESET_DIRECTORY + this.rulesets.get(index).getDatei()));
+                long lastModified = storageProvider.getLastModifiedDate(Paths.get(RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei()));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
             } catch (IOException ioException) {
@@ -123,7 +117,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     public String getCurrentRulesetFileName() {
-        return this.RULESET_DIRECTORY + this.currentRuleset.getDatei();
+        return RulesetFileUtils.getRulesetDirectory() + this.currentRuleset.getDatei();
     }
 
     public boolean isActiveRuleset(Ruleset ruleset) {
@@ -132,7 +126,18 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     public void editRuleset(Ruleset ruleset) {
         int index = this.findRulesetIndex(ruleset);
+        log.error("edit");
+        if (this.hasFileContentChanged()) {
+            log.error("changed content");
+            this.rulesetContentChanged = true;
+            this.rulesetIndexAfterSaveOrIgnore = index;
+            return;
+        }
         this.setRuleset(index);
+    }
+
+    public void editRulesetIgnore() {
+        this.setRuleset(this.rulesetIndexAfterSaveOrIgnore);
     }
 
     public int findRulesetIndex(Ruleset ruleset) {
@@ -145,42 +150,38 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     public void save() {
+        log.error("save");
         // Only create a backup if the new file content differs from the existing file content
         if (this.hasFileContentChanged()) {
-            this.createBackupFile();
+            RulesetFileUtils.createBackupFile(this.currentRuleset.getDatei());
         }
-        this.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
+        RulesetFileUtils.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         // Uncomment this when the file should be closed after saving
         // this.setRuleset(-1);
-        Helper.setMeldung("rulesetEditor", "Saved successfully", "");
+        Helper.setMeldung("rulesetEditor", Helper.getTranslation("savedRulesetFileSuccessfully"), "");
+        // Switch to an other file (rulesetIndexAfterSaveOrIgnore) when "Save" was clicked
+        // because the file should be changed and an other file is already selected
+        if (this.rulesetIndexAfterSaveOrIgnore != -1) {
+            if (this.rulesetIndexAfterSaveOrIgnore != this.currentRulesetIndex) {
+                this.setRuleset(this.rulesetIndexAfterSaveOrIgnore);
+            }
+            this.rulesetIndexAfterSaveOrIgnore = -1;
+        }
+        this.rulesetContentChanged = false;
+    }
+
+    public void saveAndChangeRuleset() {
+        this.save();
+        this.editRulesetIgnore();
     }
 
     private boolean hasFileContentChanged() {
-        List<String> oldLines = this.addLinebreakToEachLine(this.readFile(this.getCurrentRulesetFileName()));
-        List<String> newLines = Arrays.asList(this.currentRulesetFileContent.split("\n"));
-        log.error("file  : " + oldLines);
-        log.error("editor: " + newLines);
-        log.error("equal : " + this.isContentEqual(oldLines, newLines));
-        return !this.isContentEqual(oldLines, newLines);
-    }
-
-    public boolean isContentEqual(List<String> first, List<String> second) {
-        if (first.size() != second.size()) {
+        if (this.currentRuleset == null) {
             return false;
         }
-        for (int index = 0; index < first.size(); index++) {
-            String string1 = first.get(index);
-            String string2 = second.get(index);
-            int length1 = first.get(index).length();
-            int length2 = second.get(index).length();
-            log.error("length1: " + length1);
-            log.error("length2: " + length2);
-            // -1 is important to ignore the difference between \n and \r in the two lists of lines
-            if (!(string1.substring(0, length1 - 1).equals(string2.substring(0, length2 - 1)))) {
-                return false;
-            }
-        }
-        return true;
+        String fileContent = RulesetFileUtils.readFile(this.getCurrentRulesetFileName());
+        String editorContent = this.currentRulesetFileContent;
+        return !fileContent.equals(editorContent);
     }
 
     public void cancel() {
@@ -189,137 +190,24 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     private void setRuleset(int index) {
         // Avoid lost file edition
+        /*
         if (index >= 0 && this.currentRulesetIndex >= 0 && this.hasFileContentChanged()) {
-            Helper.setFehlerMeldung("rulesetEditor", "Save old file?", "");
+            this.rulesetIndexAfterSaveOrIgnore = index;
+            Helper.setFehlerMeldung("rulesetEditor", "Please save or ignore the changes.", "");
             return;
         }
+        */
         // Change the (saved or unchanged) file
         if (index >= 0 && index < this.rulesets.size()) {
             this.currentRulesetIndex = index;
             this.currentRuleset = this.rulesets.get(index);
-            List<String> lines = this.readFile(this.getCurrentRulesetFileName());
-            this.currentRulesetFileContent = this.concatenateStrings(lines, "\r");
+            this.currentRulesetFileContent = RulesetFileUtils.readFile(this.getCurrentRulesetFileName());
         } else {
             // Close the file
             this.currentRulesetIndex = -1;
             this.currentRuleset = null;
             this.currentRulesetFileContent = null;
         }
-    }
-
-    /**
-     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1".
-     * The oldest file (e.g. "fileName.xml.10") will be removed
-     *
-     * How the algorithm works (e.g. this.NUMBER_OF_BACKUP_FILES == 10):
-     *
-     * delete(backup/fileName.xml.10)
-     * rename(backup/fileName.xml.9, backup/fileName.xml.10)
-     * rename(backup/fileName.xml.8, backup/fileName.xml.9)
-     *...
-     * rename(backup/fileName.xml.2, backup/fileName.xml.3)
-     * rename(backup/fileName.xml.1, backup/fileName.xml.2)
-     * copy(fileName.xml, backup/fileName.xml.1)
-     */
-    public void createBackupFile() {
-        String fileName = this.currentRuleset.getDatei();
-        StorageProviderInterface storage = StorageProvider.getInstance();
-        try {
-            // Delete oldest file when existing...
-            String lastFileName = this.combineBackupFileName(fileName, this.NUMBER_OF_BACKUP_FILES);
-            Path lastFile = Paths.get(lastFileName);
-            if (storage.isFileExists(lastFile)) {
-                storage.deleteFile(lastFile);
-            }
-            // Rename all other backup files...
-            // This is the number of the file that should be renamed to the file with the higher number
-            int backupId = this.NUMBER_OF_BACKUP_FILES - 1;
-            while (backupId > 0) {
-                String newerFileName = this.combineBackupFileName(fileName, backupId);
-                String olderFileName = this.combineBackupFileName(fileName, backupId + 1);
-                Path newerFile = Paths.get(newerFileName);
-                if (storage.isFileExists(newerFile)) {
-                    storage.renameTo(newerFile, olderFileName);
-                }
-                backupId--;
-            }
-            // Create backup file...
-            List<String> lines = this.readFile(this.RULESET_DIRECTORY + fileName);
-            String content = this.concatenateStrings(lines, "\r");
-            this.writeFile(this.combineBackupFileName(fileName, 1), content);
-            log.info("Wrote backup file: " + fileName);
-        } catch (IOException ioException) {
-            log.error(ioException);
-        }
-    }
-
-    private String combineBackupFileName(String fileName, int backupId) {
-        return this.BACKUP_DIRECTORY + fileName + "." + backupId;
-    }
-
-    public List<String> readFile(String fileName) {
-        Path path = Paths.get(fileName);
-        try {
-            return Files.readAllLines(path);
-        } catch (IOException ioException) {
-            log.error("RulesetEditionAdministrationPlugin could not read file " + fileName);
-            return new ArrayList<>();
-        }
-    }
-
-    public void writeFile(String fileName, String content) {
-        if (!Paths.get(this.BACKUP_DIRECTORY).toFile().exists()) {
-            this.createDirectory(this.BACKUP_DIRECTORY);
-        }
-        if (!Paths.get(fileName).toFile().exists()) {
-            this.createFile(fileName);
-        }
-        try {
-            Files.write(Paths.get(fileName), content.getBytes());
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            log.error("RulesetEditionAdministrationPlugin could not write file " + fileName);
-        }
-    }
-
-    public void createFile(String fileName) {
-        Path path = Paths.get(fileName);
-        try {
-            StorageProvider.getInstance().createFile(path);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            log.error("RulesetEditionAdministrationPlugin could not create file " + fileName);
-        }
-    }
-
-    public void createDirectory(String directoryName) {
-        Path path = Paths.get(directoryName);
-        try {
-            StorageProvider.getInstance().createDirectories(path);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            log.error("RulesetEditionAdministrationPlugin could not create directory " + directoryName);
-        }
-    }
-
-    public String concatenateStrings(List<String> strings, String connector) {
-        StringBuffer stringBuffer = new StringBuffer();
-        for (int index = 0; index < strings.size(); index++) {
-            stringBuffer.append(strings.get(index));
-            if (index < strings.size() - 1) {
-                stringBuffer.append(connector);
-            }
-        }
-        return stringBuffer.toString();
-    }
-
-    public List<String> addLinebreakToEachLine(List<String> lines) {
-        for (int index = 0; index < lines.size(); index++) {
-            if (index < lines.size() - 1) {
-                lines.set(index, lines.get(index) + "\n");
-            }
-        }
-        return lines;
     }
 
 }

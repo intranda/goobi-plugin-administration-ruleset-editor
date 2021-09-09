@@ -21,6 +21,9 @@ function initRulesetEditor() {
 function loadEditorContent() {
 	var rulesetTextArea = document.getElementById("rulesetEditor");
 	rulesetTextArea.innerHTML = rulesetEditor.getValue();
+}
+function loadEditorContentAndInit() {
+	loadEditorContent();
 	initRulesetEditor();
 }
 function setHeightOfTextEditor() {
