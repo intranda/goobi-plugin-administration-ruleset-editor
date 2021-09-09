@@ -1,28 +1,25 @@
 package de.intranda.goobi.plugins;
 
-import de.sub.goobi.config.ConfigPlugins;
-import de.sub.goobi.helper.Helper;
-import de.sub.goobi.helper.StorageProvider;
-import de.sub.goobi.helper.StorageProviderInterface;
-import de.sub.goobi.persistence.managers.RulesetManager;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.extern.log4j.Log4j2;
-import lombok.Getter;
-import lombok.Setter;
-
-import net.xeoh.plugins.base.annotations.PluginImplementation;
-
 import org.apache.commons.configuration.XMLConfiguration;
-
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
+
+import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.StorageProvider;
+import de.sub.goobi.helper.StorageProviderInterface;
+import de.sub.goobi.persistence.managers.RulesetManager;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
+import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @Log4j2
 @PluginImplementation
@@ -91,7 +88,8 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
-                long lastModified = storageProvider.getLastModifiedDate(Paths.get(RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei()));
+                long lastModified =
+                        storageProvider.getLastModifiedDate(Paths.get(RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei()));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
             } catch (IOException ioException) {
@@ -126,7 +124,6 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     public void editRuleset(Ruleset ruleset) {
         int index = this.findRulesetIndex(ruleset);
-        log.error("edit");
         if (this.hasFileContentChanged()) {
             log.error("changed content");
             this.rulesetContentChanged = true;
@@ -137,6 +134,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     public void editRulesetIgnore() {
+        this.rulesetContentChanged = false;
         this.setRuleset(this.rulesetIndexAfterSaveOrIgnore);
     }
 

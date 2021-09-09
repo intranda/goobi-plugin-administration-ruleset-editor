@@ -91,19 +91,15 @@
 											</button>
 										</h:panelGroup>
 										<h:panelGroup rendered="#{AdministrationForm.administrationPlugin.currentRuleset != null}">
-											<button
-												jsf:id="edit3"
-												id="edit2"
+                                            <button
+												jsf:id="edit2"
 												class="btn margin-sides-5 #{AdministrationForm.administrationPlugin.isActiveRuleset(item) ? 'btn-primary' : ''}"
 												type="button"
 												jsf:onclick="loadEditorContent()"
 												jsf:action="#{AdministrationForm.administrationPlugin.editRuleset(item)}"
 												title="#{msgs.regelsatzBearbeiten}">
-												<!--data-toggle="modal"
-												data-target="#saveDialog">-->
-												<!--jsf:rel="tooltip"-->
 												<i class="fa fa-pencil"></i>
-												<f:ajax render="modal-container test" execute="@form" />
+												<f:ajax render="@form" execute="@form" />
 											</button>
 										</h:panelGroup>
 									</h:column>
@@ -212,55 +208,54 @@
 							</div>
 						</h:panelGroup>
 					</div>
-					<div jsf:id="test">
-						#{AdministrationForm.administrationPlugin.rulesetContentChanged}
-					</div>
-					<div jsf:id="modal-container">
-						<div
-							class="modal fade in" jsf:id="saveDialog" tabindex="-1" role="modal" aria-labelledby="myDialogLabel"
-							jsf:rendered="#{AdministrationForm.administrationPlugin.rulesetContentChanged}">
-							<div class="modal-dialog" role="document">
-								<div class="modal-content">
-									<div class="modal-header">
-										<h4 class="modal-title" id="myDialogLabel">
-											<h:outputText value="#{msgs.unsaved_changes}" />
-										</h4>
-									</div>
-									<div class="modal-body">
-										<p>#{msgs.save_unsaved_changes}</p>
-									</div>
-									<div class="modal-footer">
-										<div class="btn-group">
-											<button
-												type="button"
-												class="btn margin-sides-10"
-												style="width: 120px !important"
-												data-dismiss="modal"
-												aria-hidden="true">
-												#{msgs.cancel}
-											</button>
-											<button
-												type="button"
-												class="btn margin-sides-10"
-												style="width: 120px !important"
-												data-dismiss="modal"
-												jsf:action="#{AdministrationForm.administrationPlugin.editRulesetIgnore}">
-												#{msgs.no}
-											</button>
-											<button
-												type="button"
-												class="btn margin-sides-10 btn-success"
-												style="width: 120px !important"
-												data-dismiss="modal"
-												jsf:action="#{AdministrationForm.administrationPlugin.saveAndChangeRuleset}">
-												#{msgs.yes}
-											</button>
-										</div>
+					<div
+						class="modal fade" id="saveDialog" tabindex="-1" role="modal" aria-labelledby="myDialogLabel"
+						jsf:rendered="#{AdministrationForm.administrationPlugin.rulesetContentChanged}">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h4 class="modal-title" id="myDialogLabel">
+										<h:outputText value="#{msgs.unsaved_changes}" />
+									</h4>
+								</div>
+								<div class="modal-body">
+									<p>#{msgs.save_unsaved_changes}</p>
+								</div>
+								<div class="modal-footer">
+									<div class="btn-group">
+										<button
+											type="button"
+											class="btn margin-sides-10"
+											style="width: 120px !important"
+											data-dismiss="modal"
+											aria-hidden="true">
+											#{msgs.cancel}
+										</button>
+										<button
+											class="btn margin-sides-10"
+											style="width: 120px !important"
+                                            jsf:id="ignoreChangedFile"
+											jsf:action="#{AdministrationForm.administrationPlugin.editRulesetIgnore}">
+											#{msgs.no}
+										</button>
+										<button
+											class="btn margin-sides-10 btn-success"
+											style="width: 120px !important"
+                                            jsf:id="saveWhenChangedFile"
+											jsf:action="#{AdministrationForm.administrationPlugin.saveAndChangeRuleset}">
+											#{msgs.yes}
+										</button>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
+                    <div jsf:id="test" jsf:rendered="#{AdministrationForm.administrationPlugin.rulesetContentChanged}">
+                        Modal öffnen
+                        <script>
+                        	$('#saveDialog').modal('show')
+                        </script>
+                    </div>
 				</h:form>
 			</div>
 		</h:panelGroup>
