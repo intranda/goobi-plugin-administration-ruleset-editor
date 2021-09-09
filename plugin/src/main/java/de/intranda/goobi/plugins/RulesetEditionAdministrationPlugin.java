@@ -125,7 +125,6 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     public void editRuleset(Ruleset ruleset) {
         int index = this.findRulesetIndex(ruleset);
         if (this.hasFileContentChanged()) {
-            log.error("changed content");
             this.rulesetContentChanged = true;
             this.rulesetIndexAfterSaveOrIgnore = index;
             return;
