@@ -50,8 +50,8 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     /**
      * null means that no ruleset is selected
      */
-    @Setter
     @Getter
+    @Setter
     private String currentRulesetFileContent = null;
 
     @Getter
@@ -147,7 +147,6 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     public void save() {
-        log.error("save");
         // Only create a backup if the new file content differs from the existing file content
         if (this.hasFileContentChanged()) {
             RulesetFileUtils.createBackupFile(this.currentRuleset.getDatei());
@@ -169,7 +168,6 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     public void saveAndChangeRuleset() {
         this.save();
-        this.editRulesetIgnore();
     }
 
     private boolean hasFileContentChanged() {
@@ -177,7 +175,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
             return false;
         }
         String fileContent = RulesetFileUtils.readFile(this.getCurrentRulesetFileName());
-        String editorContent = this.currentRulesetFileContent;
+        String editorContent = this.currentRulesetFileContent.replace("\n", "\r\n");
         return !fileContent.equals(editorContent);
     }
 
@@ -186,14 +184,6 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     }
 
     private void setRuleset(int index) {
-        // Avoid lost file edition
-        /*
-        if (index >= 0 && this.currentRulesetIndex >= 0 && this.hasFileContentChanged()) {
-            this.rulesetIndexAfterSaveOrIgnore = index;
-            Helper.setFehlerMeldung("rulesetEditor", "Please save or ignore the changes.", "");
-            return;
-        }
-        */
         // Change the (saved or unchanged) file
         if (index >= 0 && index < this.rulesets.size()) {
             this.currentRulesetIndex = index;
