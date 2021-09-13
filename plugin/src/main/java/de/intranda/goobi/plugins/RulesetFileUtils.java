@@ -88,7 +88,7 @@ public abstract class RulesetFileUtils {
             return FileUtils.readFileToString(new File(fileName), charset);
         } catch (IOException ioException) {
             ioException.printStackTrace();
-            String message = "RulesetEditionAdministrationPlugin could not read file " + fileName;
+            String message = "RulesetEditorAdministrationPlugin could not read file " + fileName;
             log.error(message);
             Helper.setFehlerMeldung(message);
             return "";
@@ -107,7 +107,7 @@ public abstract class RulesetFileUtils {
             FileUtils.write(new File(fileName), content, charset);
         } catch (IOException ioException) {
             ioException.printStackTrace();
-            String message = "RulesetEditionAdministrationPlugin could not write file " + fileName;
+            String message = "RulesetEditorAdministrationPlugin could not write file " + fileName;
             log.error(message);
             Helper.setFehlerMeldung(message);
         }
@@ -119,7 +119,7 @@ public abstract class RulesetFileUtils {
             StorageProvider.getInstance().createFile(path);
         } catch (IOException ioException) {
             ioException.printStackTrace();
-            log.error("RulesetEditionAdministrationPlugin could not create file " + fileName);
+            log.error("RulesetEditorAdministrationPlugin could not create file " + fileName);
         }
     }
 
@@ -129,7 +129,7 @@ public abstract class RulesetFileUtils {
             StorageProvider.getInstance().createDirectories(path);
         } catch (IOException ioException) {
             ioException.printStackTrace();
-            log.error("RulesetEditionAdministrationPlugin could not create directory " + directoryName);
+            log.error("RulesetEditorAdministrationPlugin could not create directory " + directoryName);
         }
     }
 

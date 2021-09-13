@@ -23,10 +23,10 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @Log4j2
 @PluginImplementation
-public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin {
+public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin {
 
     @Getter
-    private String title = "intranda_administration_ruleset_edition";
+    private String title = "intranda_administration_ruleset_editor";
 
     private List<Ruleset> rulesets;
 
@@ -60,7 +60,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
     /**
      * Constructor
      */
-    public RulesetEditionAdministrationPlugin() {
+    public RulesetEditorAdministrationPlugin() {
         XMLConfiguration configuration = ConfigPlugins.getPluginConfig(this.title);
         RulesetFileUtils.init(configuration);
     }
@@ -72,7 +72,7 @@ public class RulesetEditionAdministrationPlugin implements IAdministrationPlugin
 
     @Override
     public String getGui() {
-        return "/uii/plugin_administration_ruleset_edition.xhtml";
+        return "/uii/plugin_administration_ruleset_editor.xhtml";
     }
 
     public String getCurrentEditorTitle() {

@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-public class RulesetEditionPluginTest {
+public class RulesetEditorPluginTest {
 
     @Test
     public void testVersion() throws IOException {
