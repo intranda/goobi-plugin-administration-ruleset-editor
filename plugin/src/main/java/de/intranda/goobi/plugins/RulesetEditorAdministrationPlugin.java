@@ -83,7 +83,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
-    public void initRulesetDates() {
+    private void initRulesetDates() {
         this.rulesetDates = new ArrayList<>();
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
         for (int index = 0; index < this.rulesets.size(); index++) {
