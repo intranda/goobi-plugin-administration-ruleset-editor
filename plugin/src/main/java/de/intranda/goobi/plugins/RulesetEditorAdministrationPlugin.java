@@ -98,6 +98,11 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
+    public String getLastModifiedDateOfRuleset(Ruleset ruleset) {
+        int index = this.findRulesetIndex(ruleset);
+        return this.rulesetDates.get(index);
+    }
+
     public List<Ruleset> getRulesets() {
         if (this.rulesets == null) {
             this.rulesets = RulesetManager.getAllRulesets();
@@ -175,7 +180,9 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             return false;
         }
         String fileContent = RulesetFileUtils.readFile(this.getCurrentRulesetFileName());
-        String editorContent = this.currentRulesetFileContent.replace("\n", "\r\n");
+        fileContent = fileContent.replace("\r\n", "\n");
+        fileContent = fileContent.replace("\r", "\n");
+        String editorContent = this.currentRulesetFileContent;
         return !fileContent.equals(editorContent);
     }
 

@@ -58,8 +58,7 @@
 									id="ruleset_table"
 									styleClass="table table-hover table-nomargin dataTable table-bordered responsive"
 									var="item"
-									value="#{AdministrationForm.administrationPlugin.rulesets}"
-									varStatus="status">
+									value="#{AdministrationForm.administrationPlugin.rulesets}">
 									<h:column>
 										<f:facet name="header">
 											<h:outputText value="#{msgs.rulesetTitle}" />
@@ -76,7 +75,7 @@
 										<f:facet name="header">
 											<h:outputText value="#{msgs.zuletztBearbeitet}" />
 										</f:facet>
-										<h:outputText value="#{AdministrationForm.administrationPlugin.rulesetDates.get(status.index)}" />
+										<h:outputText value="#{AdministrationForm.administrationPlugin.getLastModifiedDateOfRuleset(item)}" />
 									</h:column>
 									<h:column>
 										<f:facet name="header">
