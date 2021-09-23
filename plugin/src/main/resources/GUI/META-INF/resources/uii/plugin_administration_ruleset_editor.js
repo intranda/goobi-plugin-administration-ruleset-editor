@@ -19,8 +19,8 @@ function initRulesetEditor() {
 	setHeightOfTextEditor();
 }
 function loadEditorContent() {
-	var rulesetTextArea = document.getElementById("rulesetEditor");
-	rulesetTextArea.innerHTML = rulesetEditor.getValue();
+	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorBase64");
+	rulesetTextAreaBase64.value = window.btoa(rulesetEditor.getValue());
 }
 function loadEditorContentAndInit() {
 	loadEditorContent();

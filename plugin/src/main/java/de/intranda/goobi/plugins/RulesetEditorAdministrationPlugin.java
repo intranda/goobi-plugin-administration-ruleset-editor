@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import org.apache.commons.configuration.XMLConfiguration;
@@ -54,6 +55,12 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     @Setter
     private String currentRulesetFileContent = null;
 
+    /**
+     * null means that no config file is selected
+     */
+    @Getter
+    private String currentRulesetFileContentBase64 = null;
+
     @Getter
     private List<String> rulesetDates;
 
@@ -88,14 +95,18 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         StorageProviderInterface storageProvider = StorageProvider.getInstance();
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
-                long lastModified =
-                        storageProvider.getLastModifiedDate(Paths.get(RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei()));
+                String pathName = RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei();
+                long lastModified = storageProvider.getLastModifiedDate(Paths.get(pathName));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
             } catch (IOException ioException) {
                 this.rulesetDates.add("[no date available]");
             }
         }
+    }
+
+    public void setCurrentRulesetFileContentBase64(String content) {
+        this.currentRulesetFileContent = new String(Base64.getDecoder().decode(content));
     }
 
     public String getLastModifiedDateOfRuleset(Ruleset ruleset) {
