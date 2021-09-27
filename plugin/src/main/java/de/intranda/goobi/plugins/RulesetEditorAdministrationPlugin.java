@@ -1,6 +1,7 @@
 package de.intranda.goobi.plugins;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,7 +59,6 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     /**
      * null means that no config file is selected
      */
-    @Getter
     private String currentRulesetFileContentBase64 = null;
 
     @Getter
@@ -105,13 +105,24 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
-    public void setCurrentRulesetFileContentBase64(String content) {
-        this.currentRulesetFileContent = new String(Base64.getDecoder().decode(content));
-    }
-
     public String getLastModifiedDateOfRuleset(Ruleset ruleset) {
         int index = this.findRulesetIndex(ruleset);
         return this.rulesetDates.get(index);
+    }
+
+    public void setCurrentRulesetFileContentBase64(String content) {
+        if (content.equals("")) {
+            // content is not set up correctly, don't write into file!
+            return;
+        }
+        Base64.Decoder decoder = Base64.getDecoder();
+        byte[] decoded = decoder.decode(content);
+        this.currentRulesetFileContent = new String(decoded, Charset.forName("UTF-8"));
+    }
+
+    public String getCurrentRulesetFileContentBase64() {
+        // The return value must be empty to indicate that the text was not initialized until now.
+        return "";
     }
 
     public List<Ruleset> getRulesets() {

@@ -1,4 +1,5 @@
 var rulesetEditor;
+
 function initRulesetEditor() {
 	var rulesetTextArea = document.getElementById("rulesetEditor");
 	if (rulesetTextArea) {
@@ -18,14 +19,28 @@ function initRulesetEditor() {
 	});
 	setHeightOfTextEditor();
 }
+
 function loadEditorContent() {
-	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorBase64");
-	rulesetTextAreaBase64.value = window.btoa(rulesetEditor.getValue());
+	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorForm:rulesetEditorBase64");
+	let string = rulesetEditor.getValue();
+	console.log("Load: " + string);
+	rulesetTextAreaBase64.value = base64EncodeUnicode(string);
 }
+
+function base64EncodeUnicode(str) {
+	// Firstly, escape the string using encodeURIComponent to get the UTF-8 encoding of the characters, 
+	// Secondly, we convert the percent encodings into raw bytes, and add it to btoa() function.
+	utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
+		return String.fromCharCode('0x' + p1);
+	});
+	return btoa(utf8Bytes);
+}
+
 function loadEditorContentAndInit() {
 	loadEditorContent();
 	initRulesetEditor();
 }
+
 function setHeightOfTextEditor() {
 	var documentHeight = document.body.clientHeight;
 	var offset = $("#boxUntilBottom").offset();

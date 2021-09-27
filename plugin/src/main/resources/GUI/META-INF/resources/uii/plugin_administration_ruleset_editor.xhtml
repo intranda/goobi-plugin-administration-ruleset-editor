@@ -44,7 +44,7 @@
 		<h:panelGroup rendered="#{LoginForm.hasRole('Plugin_administration_ruleset_editor')}">
 			<div class="row">
 				<h:form id="rulesetEditorForm">
-					<div class="col-sm-4">
+					<div class="col-lg-4">
 						<div class="box box-color box-bordered">
 							<div class="box-title">
 								<h3>
@@ -127,7 +127,7 @@
 						</div>
 						-->
 					</div>
-					<div class="col-sm-8">
+					<div class="col-lg-8">
 						<h:panelGroup rendered="#{AdministrationForm.administrationPlugin.currentRuleset != null}">
 							<div class="box box-color box-bordered orange">
 								<div class="box-title">
@@ -183,7 +183,7 @@
 											forceId="true"
 											styleClass="form-control"
 											value="#{AdministrationForm.administrationPlugin.currentRulesetFileContent}" />
-										<x:inputText
+										<h:inputText
 											id="rulesetEditorBase64"
 											style="display: none;"
 											pt:aria-label="rulesetEditorBase64"
