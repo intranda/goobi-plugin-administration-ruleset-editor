@@ -181,7 +181,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         RulesetFileUtils.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         // Uncomment this when the file should be closed after saving
         // this.setRuleset(-1);
-        Helper.setMeldung("rulesetEditor", Helper.getTranslation("savedRulesetFileSuccessfully"), "");
+        Helper.setMeldung("rulesetEditor", Helper.getTranslation("plugin_administration_ruleset_editor_saved_ruleset_file"), "");
         // Switch to an other file (rulesetIndexAfterSaveOrIgnore) when "Save" was clicked
         // because the file should be changed and an other file is already selected
         if (this.rulesetIndexAfterSaveOrIgnore != -1) {
