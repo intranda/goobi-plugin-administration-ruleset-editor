@@ -5,6 +5,7 @@ function initRulesetEditor() {
 	if (rulesetTextArea) {
 		rulesetEditor = CodeMirror.fromTextArea(rulesetTextArea, {
 			lineNumbers: true,
+			viewportMargin: Infinity,
 			mode: 'xml'
 		});
 		setTimeout(function() {
@@ -15,9 +16,9 @@ function initRulesetEditor() {
 		});
 	}
 	window.addEventListener('resize', function() {
-		setHeightOfTextEditor();
+		//setHeightOfTextEditor();
 	});
-	setHeightOfTextEditor();
+	//setHeightOfTextEditor();
 }
 
 function loadEditorContent() {
