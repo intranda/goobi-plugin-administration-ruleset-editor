@@ -1,5 +1,6 @@
 package de.intranda.goobi.plugins;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
@@ -8,11 +9,19 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.configuration.XMLConfiguration;
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
+import de.intranda.goobi.plugins.xml.ReportErrorsErrorHandler;
+import de.intranda.goobi.plugins.xml.XMLError;
 import de.sub.goobi.config.ConfigPlugins;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
@@ -63,6 +72,9 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     @Getter
     private List<String> rulesetDates;
+
+    @Getter
+    private boolean validationError;
 
     /**
      * Constructor
@@ -173,7 +185,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         return -1;
     }
 
-    public void save() {
+    public void save() throws ParserConfigurationException, SAXException, IOException {
+        if (!checkXML()) {
+            return;
+        }
         // Only create a backup if the new file content differs from the existing file content
         if (this.hasFileContentChanged()) {
             RulesetFileUtils.createBackupFile(this.currentRuleset.getDatei());
@@ -193,7 +208,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         this.rulesetContentChanged = false;
     }
 
-    public void saveAndChangeRuleset() {
+    public void saveAndChangeRuleset() throws ParserConfigurationException, SAXException, IOException {
         this.save();
     }
 
@@ -224,6 +239,46 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             this.currentRuleset = null;
             this.currentRulesetFileContent = null;
         }
+    }
+
+    private boolean checkXML() throws ParserConfigurationException, SAXException, IOException {
+        boolean ok = true;
+        List<XMLError> errors = checkXMLWellformed(this.currentRulesetFileContent);
+        if (!errors.isEmpty()) {
+            for (XMLError error : errors) {
+                Helper.setFehlerMeldung("rulesetEditor",
+                        String.format("Line %d column %d: %s", error.getLine(), error.getColumn(), error.getMessage()), "");
+            }
+            if (errors.stream().anyMatch(e -> e.getSeverity().equals("ERROR") || e.getSeverity().equals("FATAL"))) {
+                this.validationError = true;
+                //this needs to be done, so the modal won't appear repeatedly and ask the user if he wants to save.
+                this.rulesetIndexAfterSaveOrIgnore = -1;
+                this.rulesetContentChanged = false;
+                Helper.setFehlerMeldung("rulesetEditor", "File was not saved, because the XML is not well-formed", "");
+                ok = false;
+            }
+        } else {
+            this.validationError = false;
+        }
+        return ok;
+    }
+
+    private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setValidating(false);
+        factory.setNamespaceAware(true);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        ReportErrorsErrorHandler eh = new ReportErrorsErrorHandler();
+        builder.setErrorHandler(eh);
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes("UTF-8"))) {
+            builder.parse(bais);
+        } catch (SAXParseException e) {
+            //ignore this, because we collect the errors in the errorhandler and give them to the user.
+        }
+
+        return eh.getErrors();
     }
 
 }
