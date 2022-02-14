@@ -12,17 +12,14 @@ import java.util.List;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 
+import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.StorageProviderInterface;
 import lombok.extern.log4j.Log4j2;
-import lombok.Getter;
 
 @Log4j2
 public abstract class RulesetFileUtils {
-
-    @Getter
-    private static String rulesetDirectory;
 
     private static String backupDirectory;
 
@@ -31,25 +28,20 @@ public abstract class RulesetFileUtils {
     private static Charset standardCharset;
 
     public static void init(XMLConfiguration configuration) {
-        RulesetFileUtils.rulesetDirectory = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
         RulesetFileUtils.backupDirectory = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
         RulesetFileUtils.numberOfBackupFiles = configuration.getInt("numberOfBackupFiles", 10);
         RulesetFileUtils.standardCharset = Charset.forName("UTF-8");
     }
 
     /**
-     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1".
-     * The oldest file (e.g. "fileName.xml.10") will be removed
+     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1". The oldest file (e.g.
+     * "fileName.xml.10") will be removed
      *
      * How the algorithm works (e.g. this.NUMBER_OF_BACKUP_FILES == 10):
      *
-     * delete(backup/fileName.xml.10)
-     * rename(backup/fileName.xml.9, backup/fileName.xml.10)
-     * rename(backup/fileName.xml.8, backup/fileName.xml.9)
-     *...
-     * rename(backup/fileName.xml.2, backup/fileName.xml.3)
-     * rename(backup/fileName.xml.1, backup/fileName.xml.2)
-     * copy(fileName.xml, backup/fileName.xml.1)
+     * delete(backup/fileName.xml.10) rename(backup/fileName.xml.9, backup/fileName.xml.10) rename(backup/fileName.xml.8, backup/fileName.xml.9) ...
+     * rename(backup/fileName.xml.2, backup/fileName.xml.3) rename(backup/fileName.xml.1, backup/fileName.xml.2) copy(fileName.xml,
+     * backup/fileName.xml.1)
      */
     public static void createBackupFile(String fileName) {
         StorageProviderInterface storage = StorageProvider.getInstance();
@@ -82,12 +74,17 @@ public abstract class RulesetFileUtils {
                 backupId--;
             }
             // Create backup file...
-            String content = RulesetFileUtils.readFile(RulesetFileUtils.rulesetDirectory + fileName);
+            String content = RulesetFileUtils.readFile(RulesetFileUtils.getRulesetDirectory() + fileName);
             RulesetFileUtils.writeFile(RulesetFileUtils.createBackupFileNameWithTimestamp(fileName, 1), content);
             log.info("Wrote backup file: " + fileName);
         } catch (IOException ioException) {
             log.error(ioException);
         }
+    }
+
+    public static String getRulesetDirectory() {
+        ConfigurationHelper configuration = ConfigurationHelper.getInstance();
+        return configuration.getRulesetFolder();
     }
 
     private static String extractTimestampFromFileName(String fileName) {
