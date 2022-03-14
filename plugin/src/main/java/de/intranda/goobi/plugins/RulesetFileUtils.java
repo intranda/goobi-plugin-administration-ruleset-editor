@@ -11,12 +11,13 @@ import java.util.List;
 
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.goobi.io.BackupFileManager;
 
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.StorageProviderInterface;
-import lombok.extern.log4j.Log4j2;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public abstract class RulesetFileUtils {
@@ -24,32 +25,44 @@ public abstract class RulesetFileUtils {
     @Getter
     private static String rulesetDirectory;
 
+    @Getter
     private static String backupDirectory;
 
+    @Getter
     private static int numberOfBackupFiles;
 
     private static Charset standardCharset;
 
     public static void init(XMLConfiguration configuration) {
+        System.out.println("init");
         RulesetFileUtils.rulesetDirectory = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
         RulesetFileUtils.backupDirectory = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
         RulesetFileUtils.numberOfBackupFiles = configuration.getInt("numberOfBackupFiles", 10);
         RulesetFileUtils.standardCharset = Charset.forName("UTF-8");
     }
 
+    public void createBackup(String fileName) {
+
+        System.out.println("path: " + RulesetFileUtils.rulesetDirectory);
+        System.out.println("backup path: " + RulesetFileUtils.backupDirectory);
+        System.out.println("file: " + fileName);
+        System.out.println("number: " + RulesetFileUtils.numberOfBackupFiles);
+
+        String path = RulesetFileUtils.getRulesetDirectory();
+        String backupPath = RulesetFileUtils.getBackupDirectory();
+        int number = RulesetFileUtils.getNumberOfBackupFiles();
+        BackupFileManager.createBackup(path, backupPath, fileName, number, true);
+    }
+
     /**
-     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1".
-     * The oldest file (e.g. "fileName.xml.10") will be removed
+     * Rotates the backup files (older files get a higher number) and creates a backup file in "fileName.xml.1". The oldest file (e.g.
+     * "fileName.xml.10") will be removed
      *
      * How the algorithm works (e.g. this.NUMBER_OF_BACKUP_FILES == 10):
      *
-     * delete(backup/fileName.xml.10)
-     * rename(backup/fileName.xml.9, backup/fileName.xml.10)
-     * rename(backup/fileName.xml.8, backup/fileName.xml.9)
-     *...
-     * rename(backup/fileName.xml.2, backup/fileName.xml.3)
-     * rename(backup/fileName.xml.1, backup/fileName.xml.2)
-     * copy(fileName.xml, backup/fileName.xml.1)
+     * delete(backup/fileName.xml.10) rename(backup/fileName.xml.9, backup/fileName.xml.10) rename(backup/fileName.xml.8, backup/fileName.xml.9) ...
+     * rename(backup/fileName.xml.2, backup/fileName.xml.3) rename(backup/fileName.xml.1, backup/fileName.xml.2) copy(fileName.xml,
+     * backup/fileName.xml.1)
      */
     public static void createBackupFile(String fileName) {
         StorageProviderInterface storage = StorageProvider.getInstance();
