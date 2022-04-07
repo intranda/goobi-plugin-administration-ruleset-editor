@@ -41,6 +41,8 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     private List<Ruleset> rulesets;
 
+    private List<Boolean> writable;
+
     /**
      * -1 means that no ruleset is selected
      */
@@ -117,6 +119,30 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
+    private void initWritePermissionFlags() {
+        this.writable = new ArrayList<>();
+        StorageProviderInterface storageProvider = StorageProvider.getInstance();
+        for (int index = 0; index < this.rulesets.size(); index++) {
+            String pathName = RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei();
+            this.writable.add(storageProvider.isWritable(Paths.get(pathName)));
+        }
+    }
+
+    public boolean isCurrentRulesetWritable() {
+        return this.isRulesetWritable(this.currentRuleset);
+    }
+
+    public boolean isRulesetWritable(Ruleset ruleset) {
+        int index = 0;
+        while (index < this.rulesets.size()) {
+            if (this.rulesets.get(index).getDatei().equals(ruleset.getDatei())) {
+                return this.writable.get(index);
+            }
+            index++;
+        }
+        return false;
+    }
+
     public String getLastModifiedDateOfRuleset(Ruleset ruleset) {
         int index = this.findRulesetIndex(ruleset);
         return this.rulesetDates.get(index);
@@ -141,6 +167,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         if (this.rulesets == null) {
             this.rulesets = RulesetManager.getAllRulesets();
             this.initRulesetDates();
+            this.initWritePermissionFlags();
         }
         if (this.rulesets != null) {
             return this.rulesets;
@@ -169,6 +196,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             return;
         }
         this.setRuleset(index);
+        if (!this.writable.get(index)) {
+            String key = "plugin_administration_ruleset_editor_ruleset_not_writable_check_permissions";
+            Helper.setMeldung("rulesetEditor", Helper.getTranslation(key), "");
+        }
     }
 
     public void editRulesetIgnore() {

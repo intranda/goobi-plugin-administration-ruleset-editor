@@ -118,7 +118,7 @@ public abstract class RulesetFileUtils {
         try {
             Charset charset = RulesetFileUtils.standardCharset;
             return FileUtils.readFileToString(new File(fileName), charset);
-        } catch (IOException ioException) {
+        } catch (IOException | IllegalArgumentException ioException) {
             ioException.printStackTrace();
             String message = "RulesetEditorAdministrationPlugin could not read file " + fileName;
             log.error(message);
@@ -137,7 +137,7 @@ public abstract class RulesetFileUtils {
         try {
             Charset charset = RulesetFileUtils.standardCharset;
             FileUtils.write(new File(fileName), content, charset);
-        } catch (IOException ioException) {
+        } catch (IOException | IllegalArgumentException ioException) {
             ioException.printStackTrace();
             String message = "RulesetEditorAdministrationPlugin could not write file " + fileName;
             log.error(message);
