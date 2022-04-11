@@ -10,6 +10,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.goobi.io.BackupFileManager;
 
+import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import lombok.Getter;
@@ -30,7 +31,7 @@ public abstract class RulesetFileUtils {
     private static Charset standardCharset;
 
     public static void init(XMLConfiguration configuration) {
-        RulesetFileUtils.rulesetDirectory = configuration.getString("rulesetDirectory", "/opt/digiverso/goobi/rulesets/");
+        RulesetFileUtils.rulesetDirectory = ConfigurationHelper.getInstance().getRulesetFolder();
         RulesetFileUtils.backupDirectory = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
         RulesetFileUtils.numberOfBackupFiles = configuration.getInt("numberOfBackupFiles", 10);
         RulesetFileUtils.standardCharset = Charset.forName("UTF-8");
@@ -40,7 +41,15 @@ public abstract class RulesetFileUtils {
         String path = RulesetFileUtils.getRulesetDirectory();
         String backupPath = RulesetFileUtils.getBackupDirectory();
         int number = RulesetFileUtils.getNumberOfBackupFiles();
-        BackupFileManager.createBackup(path, backupPath, fileName, number, true);
+        try {
+            BackupFileManager.createBackup(path, backupPath, fileName, number, false);
+        } catch (IOException ioException) {
+            String message = "RulesetEditorAdministrationPlugin could not create the backup file.";
+            message += " Please check the permissions in the configured backup directory.";
+            log.error(message);
+            String key = "plugin_administration_ruleset_editor_backup_not_writable_check_permissions";
+            Helper.setFehlerMeldung("rulesetEditor", Helper.getTranslation(key), "");
+        }
     }
 
     public static String readFile(String fileName) {
@@ -51,7 +60,7 @@ public abstract class RulesetFileUtils {
             ioException.printStackTrace();
             String message = "RulesetEditorAdministrationPlugin could not read file " + fileName;
             log.error(message);
-            Helper.setFehlerMeldung(message);
+            Helper.setFehlerMeldung("rulesetEditor", message, "");
             return "";
         }
     }
@@ -70,7 +79,7 @@ public abstract class RulesetFileUtils {
             ioException.printStackTrace();
             String message = "RulesetEditorAdministrationPlugin could not write file " + fileName;
             log.error(message);
-            Helper.setFehlerMeldung(message);
+            Helper.setFehlerMeldung("rulesetEditor", message, "");
         }
     }
 

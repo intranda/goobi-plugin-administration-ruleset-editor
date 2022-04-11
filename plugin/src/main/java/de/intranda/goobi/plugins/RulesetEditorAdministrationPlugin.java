@@ -108,10 +108,12 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
                 String pathName = RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei();
+                System.out.println(pathName);
                 long lastModified = storageProvider.getLastModifiedDate(Paths.get(pathName));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
             } catch (IOException ioException) {
+                ioException.printStackTrace();
                 this.rulesetDates.add("[no date available]");
             }
         }
@@ -207,10 +209,6 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             this.rulesetIndexAfterSaveOrIgnore = -1;
         }
         this.rulesetContentChanged = false;
-    }
-
-    public void saveAndChangeRuleset() throws ParserConfigurationException, SAXException, IOException {
-        this.save();
     }
 
     private boolean hasFileContentChanged() {
