@@ -110,7 +110,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
                 String pathName = RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei();
-                System.out.println(pathName);
+                //System.out.println(pathName);
                 long lastModified = storageProvider.getLastModifiedDate(Paths.get(pathName));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
