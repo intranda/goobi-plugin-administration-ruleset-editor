@@ -225,12 +225,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         // Only create a backup if the new file content differs from the existing file content
         if (this.hasFileContentChanged()) {
             RulesetFileUtils.createBackup(this.currentRuleset.getDatei());
-            //RulesetFileUtils.createBackupFile(this.currentRuleset.getDatei());
+            RulesetFileUtils.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         }
-        RulesetFileUtils.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         // Uncomment this when the file should be closed after saving
         // this.setRuleset(-1);
-        Helper.setMeldung("rulesetEditor", Helper.getTranslation("plugin_administration_ruleset_editor_saved_ruleset_file"), "");
         // Switch to an other file (rulesetIndexAfterSaveOrIgnore) when "Save" was clicked
         // because the file should be changed and an other file is already selected
         if (this.rulesetIndexAfterSaveOrIgnore != -1) {
