@@ -3,6 +3,7 @@ package de.intranda.goobi.plugins;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -34,7 +35,7 @@ public abstract class RulesetFileUtils {
         RulesetFileUtils.rulesetDirectory = ConfigurationHelper.getInstance().getRulesetFolder();
         RulesetFileUtils.backupDirectory = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
         RulesetFileUtils.numberOfBackupFiles = configuration.getInt("numberOfBackupFiles", 10);
-        RulesetFileUtils.standardCharset = Charset.forName("UTF-8");
+        RulesetFileUtils.standardCharset = StandardCharsets.UTF_8;
     }
 
     public static void createBackup(String fileName) throws IOException {
