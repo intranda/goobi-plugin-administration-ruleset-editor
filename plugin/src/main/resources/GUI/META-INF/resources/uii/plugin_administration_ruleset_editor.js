@@ -22,9 +22,9 @@ function initRulesetEditor() {
 }
 
 function loadEditorContent() {
-	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorForm:rulesetEditorBase64");
+	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorForm:contentbox:rulesetEditorBase64");
 	let string = rulesetEditor.getValue();
-	console.log("Load: " + string);
+	// console.log("Load: " + string);
 	rulesetTextAreaBase64.value = base64EncodeUnicode(string);
 }
 
