@@ -2,7 +2,7 @@ package de.intranda.goobi.plugins;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -157,7 +157,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
         Base64.Decoder decoder = Base64.getDecoder();
         byte[] decoded = decoder.decode(content);
-        this.currentRulesetFileContent = new String(decoded, Charset.forName("UTF-8"));
+        this.currentRulesetFileContent = new String(decoded, StandardCharsets.UTF_8);
     }
 
     public String getCurrentRulesetFileContentBase64() {
@@ -300,7 +300,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         ReportErrorsErrorHandler eh = new ReportErrorsErrorHandler();
         builder.setErrorHandler(eh);
 
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes("UTF-8"))) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
             builder.parse(bais);
         } catch (SAXParseException e) {
             //ignore this, because we collect the errors in the errorhandler and give them to the user.
