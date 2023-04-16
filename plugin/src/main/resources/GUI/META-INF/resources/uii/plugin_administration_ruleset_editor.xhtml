@@ -56,7 +56,7 @@
 		<h:form id="rulesetEditorForm" rendered="#{LoginForm.hasRole('Plugin_administration_ruleset_editor')}">
 			
             <div class="row">
-    			<div class="col-sm-12 col-md-4">
+    			<div class="col-sm-12 col-md-4 mb-3" id="leftarea">
                     
                     <!-- BOX WITH FILES -->
                     <intranda:box
@@ -73,15 +73,15 @@
         							styleClass="table table-bordered table-fixed table-hover"
         							var="item"
         							value="#{AdministrationForm.administrationPlugin.rulesets}">
-        							<h:column>
+        							<h:column headerClass="gw-table-fixed__sizeXXS">
         								<f:facet name="header">
-        									<h:outputText value="#{msgs.rulesetTitle}" />
+        									<h:outputText value="#{msgs.regelsatz}" />
         								</f:facet>
         								<h:outputText value="#{item.titel}"/>
         							</h:column>
-        							<h:column>
+        							<h:column headerClass="gw-table-fixed__sizeXXS">
         								<f:facet name="header">
-        									<h:outputText value="#{msgs.rulesetFile}" />
+        									<h:outputText value="#{msgs.datei}" />
         								</f:facet>
         								<h:outputText value="#{item.datei}" />
         							</h:column>
@@ -121,35 +121,34 @@
         								</h:panelGroup>
         							</h:column>
         						</h:dataTable>
-            					</div>
-            				</div>
-        				 <!-- // TABLE WITH FILE LIST -->
+        					</div>
+        				</div>
+    				 <!-- // TABLE WITH FILE LIST -->
+                    </intranda:box>
+                    <!-- // BOX WITH FILES -->
+                
+                    <!-- BOX WITH VALIDATION RESULTS -->
+                    <div class="mt-3" jsf:rendered="#{false}">
+                        <intranda:box
+                            boxType="outline"
+                            boxPadding="true"
+                            icon="fa-check-circle-o"
+                            title="#{msgs.plugin_administration_ruleset_editor_validation_result}">
+                            
+                            <h:panelGroup id="actionform" styleClass="col-sm-12">
+                                <div class="row">
+                                </div>
+                            </h:panelGroup>
                         </intranda:box>
-                        <!-- // BOX WITH FILES -->
-                    
-                        <!-- BOX WITH VALIDATION RESULTS -->
-                        <div class="mt-3" jsf:rendered="#{false}">
-                            <intranda:box
-                                boxType="outline"
-                                boxPadding="true"
-                                icon="fa-check-circle-o"
-                                title="#{msgs.plugin_administration_ruleset_editor_validation_result}">
-                                
-                                <h:panelGroup id="actionform" styleClass="col-sm-12">
-                                    <div class="row">
-                                    </div>
-                                </h:panelGroup>
-                            </intranda:box>
-                        </div>
-                        <!-- // BOX WITH VALIDATION RESULTS -->
-                    
-    			     </div>
-    			     <!-- // LEFT AREA -->
+                    </div>
+                    <!-- // BOX WITH VALIDATION RESULTS -->
+                
+			     </div>
+			     <!-- // LEFT AREA -->
                 
                 
                 <!-- RIGHT AREA -->
-                
-                <div class="col-sm-12 col-md-8">
+                <div class="col-sm-12 col-md-8" id="rightarea">
     				<h:panelGroup rendered="#{AdministrationForm.administrationPlugin.currentRuleset != null}">
     					<intranda:box
                             id="contentbox"
@@ -229,48 +228,64 @@
     			</div>
                  <!-- // RIGHT AREA -->
 			
+                <!-- MODAL TO ASK FOR SAVING -->
                 <div
-    				class="modal fade" id="saveDialog" tabindex="-1" role="modal" aria-labelledby="myDialogLabel"
+    				class="modal fade" 
+                    id="saveDialog" 
+                    tabindex="-1" 
+                    role="modal" 
+                    aria-labelledby="myDialogLabel"
     				jsf:rendered="#{AdministrationForm.administrationPlugin.rulesetContentChanged}">
     				<div class="modal-dialog" role="document">
     					<div class="modal-content">
-    						<div class="modal-header">
+    						
+                            <!-- MODAL HEADER -->
+                            <div class="modal-header bg-primary-400 text-white">
     							<h4 class="modal-title" id="myDialogLabel">
     								<h:outputText value="#{msgs.plugin_administration_ruleset_editor_unsaved_changes}" />
     							</h4>
+                                <button
+                                    type="button"
+                                    class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
     						</div>
-    						<div class="modal-body">
+    						<!-- // MODAL HEADER -->
+                            
+                            <!-- MODAL BODY -->
+                            <div class="modal-body">
     							<p>#{msgs.plugin_administration_ruleset_editor_save_unsaved_changes}</p>
     						</div>
-    						<div class="modal-footer">
-    							<div class="btn-group">
-    								<button
-    									type="button"
-    									class="btn margin-sides-10"
-    									style="width: 120px !important"
-    									data-dismiss="modal"
-    									aria-hidden="true">
-    									#{msgs.cancel}
-    								</button>
-    								<button
-    									class="btn margin-sides-10"
-    									style="width: 120px !important"
-    									jsf:id="ignoreChangedFile"
-    									jsf:action="#{AdministrationForm.administrationPlugin.editRulesetIgnore}">
-    									#{msgs.no}
-    								</button>
-    								<button
-    									class="btn margin-sides-10 btn-success"
-    									style="width: 120px !important"
-    									jsf:id="saveWhenChangedFile"
-    									jsf:action="#{AdministrationForm.administrationPlugin.save}">
-    									#{msgs.yes}
-    								</button>
-    							</div>
-    						</div>
-    					</div>
+    						<!-- // MODAL BODY -->
+                            
+                            <!-- MODAL FOOTER -->
+                            <div class="modal-footer">
+								<button
+                                    class="btn btn-hot"
+                                    jsf:id="ignoreChangedFile"
+                                    jsf:action="#{AdministrationForm.administrationPlugin.editRulesetIgnore}">
+                                    <i class="fa fa-trash-o"></i>
+                                    <span>
+                                        #{msgs.discard}
+                                    </span>
+                                </button>
+                                <button
+                                    class="btn btn-success"
+                                    jsf:id="saveWhenChangedFile"
+                                    jsf:action="#{AdministrationForm.administrationPlugin.save}">
+                                    <i class="fa fa-save"></i>
+                                    <span>
+                                        #{msgs.save}
+                                    </span>
+                                </button>
+                            </div>
+    					    <!-- // MODAL FOOTER -->
+                           
+                        </div>
     				</div>
     			</div>
+                <!-- // MODAL TO ASK FOR SAVING -->
+                
     			<div jsf:id="test" jsf:rendered="#{AdministrationForm.administrationPlugin.rulesetContentChanged}">
     				<script>
     					$('#saveDialog').modal('show')
