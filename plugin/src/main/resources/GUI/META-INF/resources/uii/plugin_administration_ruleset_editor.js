@@ -66,11 +66,11 @@ function stickyBoxes() {
 }
 	
 document.addEventListener('DOMContentLoaded', function() {
-  stickyBoxes();
+  //stickyBoxes();
 });
 
 jsf.ajax.addOnEvent( function( data ) {
     if (data.status == "success"){
-		stickyBoxes();
+		//stickyBoxes();
 	}    
 });

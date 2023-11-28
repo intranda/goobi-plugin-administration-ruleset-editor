@@ -2,6 +2,8 @@ package de.intranda.goobi.plugins;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -9,14 +11,27 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.configuration.XMLConfiguration;
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -78,6 +93,12 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     @Getter
     private boolean validationError;
 
+    @Getter
+    private List<XMLError> validationErrors;
+
+    @Getter
+    private boolean showMore = false;
+
     /**
      * Constructor
      */
@@ -102,6 +123,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         } else {
             return "";
         }
+    }
+
+    public void toggleShowMore() {
+        showMore = !showMore;
     }
 
     private void initRulesetDates() {
@@ -151,7 +176,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     }
 
     public void setCurrentRulesetFileContentBase64(String content) {
-        if (content.equals("")) {
+        if ("".equals(content)) {
             // content is not set up correctly, don't write into file!
             return;
         }
@@ -191,6 +216,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     }
 
     public void editRuleset(Ruleset ruleset) {
+        validationErrors = null;
         int index = this.findRulesetIndex(ruleset);
         if (this.hasFileContentChanged()) {
             this.rulesetContentChanged = true;
@@ -218,7 +244,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         return -1;
     }
 
-    public void save() throws ParserConfigurationException, SAXException, IOException {
+    public void save() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         if (!checkXML()) {
             return;
         }
@@ -238,6 +264,12 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             this.rulesetIndexAfterSaveOrIgnore = -1;
         }
         this.rulesetContentChanged = false;
+    }
+
+    public void validate() throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
+        validationErrors = new ArrayList<>();
+        checkRulesetXsd(this.currentRulesetFileContent);
+        checkRulesetValid(this.currentRulesetFileContent);
     }
 
     private boolean hasFileContentChanged() {
@@ -269,15 +301,19 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
-    private boolean checkXML() throws ParserConfigurationException, SAXException, IOException {
+    private boolean checkXML() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         boolean ok = true;
-        List<XMLError> errors = checkXMLWellformed(this.currentRulesetFileContent);
+
+        List<XMLError> errors = new ArrayList<>();
+        errors.addAll(checkXMLWellformed(this.currentRulesetFileContent));
+
         if (!errors.isEmpty()) {
             for (XMLError error : errors) {
                 Helper.setFehlerMeldung("rulesetEditor",
                         String.format("Line %d column %d: %s", error.getLine(), error.getColumn(), error.getMessage()), "");
+
             }
-            if (errors.stream().anyMatch(e -> e.getSeverity().equals("ERROR") || e.getSeverity().equals("FATAL"))) {
+            if (errors.stream().anyMatch(e -> "ERROR".equals(e.getSeverity()) || "FATAL".equals(e.getSeverity()))) {
                 this.validationError = true;
                 //this needs to be done, so the modal won't appear repeatedly and ask the user if he wants to save.
                 this.rulesetIndexAfterSaveOrIgnore = -1;
@@ -291,7 +327,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         return ok;
     }
 
-    private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException {
+    private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setValidating(false);
         factory.setNamespaceAware(true);
@@ -301,12 +337,116 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         builder.setErrorHandler(eh);
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-            builder.parse(bais);
+            Document document = builder.parse(bais);
+            XPathFactory xPathFactory = XPathFactory.newInstance();
+            XPath xpath = xPathFactory.newXPath();
         } catch (SAXParseException e) {
             //ignore this, because we collect the errors in the errorhandler and give them to the user.
         }
 
         return eh.getErrors();
+    }
+
+    private void checkRulesetValid(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setValidating(false);
+        factory.setNamespaceAware(true);
+
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        ReportErrorsErrorHandler eh = new ReportErrorsErrorHandler();
+        builder.setErrorHandler(eh);
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+            Document document = builder.parse(bais);
+            XPathFactory xPathFactory = XPathFactory.newInstance();
+            XPath xpath = xPathFactory.newXPath();
+
+            // ERROR: undefined but used
+            String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
+            checkIssuesViaXPath(xpath, document, "//metadata[not(.=//MetadataType/Name)]", "ERROR", errorDescription);
+            errorDescription = Helper.getTranslation("ruleset_validation_undefined_structure_data_but_used");
+            checkIssuesViaXPath(xpath, document, "//allowedchildtype[not(.=//DocStrctType/Name)]", "ERROR", errorDescription);
+
+            // ERROR: empty translations
+            errorDescription = Helper.getTranslation("ruleset_validation_empty_translation");
+            checkIssuesViaXPath(xpath, document, "//language[.='']/../Name", "ERROR", errorDescription);
+
+            // ERROR: metadata used twice inside of structure element
+            errorDescription = Helper.getTranslation("ruleset_validation_metadata_used_twice_inside_of_structure_element");
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]",
+                    "ERROR", errorDescription);
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]/../Name", "ERROR",
+                    errorDescription);
+
+            // WARNING: defined twice
+            errorDescription = Helper.getTranslation("ruleset_validation_metadata_defined_twice");
+            checkIssuesViaXPath(xpath, document, "//MetadataType/Name[.=preceding::MetadataType/Name]", "WARNING", errorDescription);
+            errorDescription = Helper.getTranslation("ruleset_validation_structure_data_defined_twice");
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/Name[.=preceding::DocStrctType/Name]", "WARNING", errorDescription);
+
+            // WARNING: allowedchildtype defined twice
+            errorDescription = Helper.getTranslation("ruleset_validation_allowedchildtype_defined_twice");
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/allowedchildtype[.=preceding-sibling::allowedchildtype]", "WARNING",
+                    errorDescription);
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/allowedchildtype[.=preceding-sibling::allowedchildtype]/../Name", "WARNING",
+                    errorDescription);
+
+            // WARNING: undefined but used for export
+            errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_mapped_for_export");
+            checkIssuesViaXPath(xpath, document, "//METS/Metadata/InternalName[not(.=//MetadataType/Name)]", "WARNING", errorDescription);
+            errorDescription = Helper.getTranslation("ruleset_validation_undefined_structure_data_but_mapped_for_export");
+            checkIssuesViaXPath(xpath, document, "//METS/DocStruct/InternalName[not(.=//DocStrctType/Name)]", "WARNING", errorDescription);
+
+            // WARNING: topStructs used inside of allowedchildtype
+            errorDescription = Helper.getTranslation("ruleset_validation_topstruct_used_as_allowed_child");
+            checkIssuesViaXPath(xpath, document,
+                    "//DocStrctType[not(@anchor=\"true\")]/allowedchildtype[.=//DocStrctType[@topStruct=\"true\"]/Name]",
+                    "WARNING", errorDescription);
+            checkIssuesViaXPath(xpath, document,
+                    "//DocStrctType[not(@anchor=\"true\")][allowedchildtype=//DocStrctType[@topStruct=\"true\"]/Name]/Name",
+                    "WARNING", errorDescription);
+
+            // INFO: not mapped for export
+            errorDescription = Helper.getTranslation("ruleset_validation_structure_data_not_mapped_for_export");
+            checkIssuesViaXPath(xpath, document, "//DocStrctType/Name[not(.=//METS/DocStruct/InternalName)]",
+                    "INFO", errorDescription);
+            errorDescription = Helper.getTranslation("ruleset_validation_metadata_not_mapped_for_export");
+            checkIssuesViaXPath(xpath, document, "//MetadataType/Name[not(.=//METS/Metadata/InternalName)]",
+                    "INFO", errorDescription);
+
+        } catch (SAXParseException e) {
+            //ignore this, because we collect the errors in the errorhandler and give them to the user.
+        }
+    }
+
+    private void checkIssuesViaXPath(XPath xpath, Document document, String expression, String severity, String errorType)
+            throws XPathExpressionException {
+        XPathExpression xpathExpression = xpath.compile(expression);
+        NodeList nodeList = (NodeList) xpathExpression.evaluate(document, XPathConstants.NODESET);
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            validationErrors.add(new XMLError(0, 0, severity, node.getTextContent() + " - " + errorType));
+        }
+    }
+
+    private void checkRulesetXsd(String xml) {
+        String xsdUrl = "https://github.com/intranda/ugh/raw/master/ugh/ruleset_schema.xsd";
+
+        try {
+            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = schemaFactory.newSchema(new StreamSource(new URL(xsdUrl).openStream()));
+            Validator validator = schema.newValidator();
+            StreamSource source = new StreamSource(new StringReader(xml));
+            validator.validate(source);
+        } catch (Exception e) {
+            if (e instanceof SAXParseException) {
+                SAXParseException se = (SAXParseException) e;
+                validationErrors.add(new XMLError(se.getLineNumber(), 0, "ERROR", e.getMessage()));
+            } else {
+                validationErrors.add(new XMLError(0, 0, "ERROR", e.getMessage()));
+            }
+
+        }
     }
 
 }
