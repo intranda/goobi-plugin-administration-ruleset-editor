@@ -49,7 +49,7 @@ public abstract class RulesetFileUtils {
             message += " Please check the permissions in the configured backup directory.";
             log.error(message);
             String key = "plugin_administration_ruleset_editor_backup_not_writable_check_permissions";
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             buffer.append(Helper.getTranslation(key));
             buffer.append(" (");
             buffer.append(backupPath);
@@ -76,9 +76,7 @@ public abstract class RulesetFileUtils {
         if (!Paths.get(RulesetFileUtils.backupDirectory).toFile().exists()) {
             RulesetFileUtils.createDirectory(RulesetFileUtils.backupDirectory);
         }
-        if (!Paths.get(fileName).toFile().exists()) {
-            RulesetFileUtils.createFile(fileName);
-        }
+
         try {
             Charset charset = RulesetFileUtils.standardCharset;
             FileUtils.write(new File(fileName), content, charset);
@@ -88,16 +86,6 @@ public abstract class RulesetFileUtils {
             String message = "RulesetEditorAdministrationPlugin could not write file " + fileName;
             log.error(message);
             Helper.setFehlerMeldung("rulesetEditor", message, "");
-        }
-    }
-
-    public static void createFile(String fileName) {
-        Path path = Paths.get(fileName);
-        try {
-            StorageProvider.getInstance().createFile(path);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            log.error("RulesetEditorAdministrationPlugin could not create file " + fileName);
         }
     }
 
