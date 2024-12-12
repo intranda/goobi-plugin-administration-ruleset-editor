@@ -44,12 +44,12 @@ import de.sub.goobi.helper.StorageProviderInterface;
 import de.sub.goobi.persistence.managers.RulesetManager;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j2;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
-@Log4j2
 @PluginImplementation
 public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin {
+
+    private static final long serialVersionUID = 2758642874624084899L;
 
     @Getter
     private String title = "intranda_administration_ruleset_editor";
@@ -82,11 +82,6 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     @Setter
     private String currentRulesetFileContent = null;
 
-    /**
-     * null means that no config file is selected
-     */
-    private String currentRulesetFileContentBase64 = null;
-
     @Getter
     private List<String> rulesetDates;
 
@@ -94,7 +89,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     private boolean validationError;
 
     @Getter
-    private List<XMLError> validationErrors;
+    private transient List<XMLError> validationErrors;
 
     @Getter
     private boolean showMore = false;
@@ -135,7 +130,6 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         for (int index = 0; index < this.rulesets.size(); index++) {
             try {
                 String pathName = RulesetFileUtils.getRulesetDirectory() + this.rulesets.get(index).getDatei();
-                //System.out.println(pathName);
                 long lastModified = storageProvider.getLastModifiedDate(Paths.get(pathName));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 this.rulesetDates.add(formatter.format(lastModified));
@@ -224,7 +218,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             return;
         }
         this.setRuleset(index);
-        if (!this.writable.get(index)) {
+        if (!this.writable.get(index).booleanValue()) {
             String key = "plugin_administration_ruleset_editor_ruleset_not_writable_check_permissions";
             Helper.setMeldung("rulesetEditor", Helper.getTranslation(key), "");
         }
@@ -244,7 +238,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         return -1;
     }
 
-    public void save() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    public void save() throws ParserConfigurationException, SAXException, IOException {
         if (!checkXML()) {
             return;
         }
@@ -253,8 +247,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             RulesetFileUtils.createBackup(this.currentRuleset.getDatei());
             RulesetFileUtils.writeFile(this.getCurrentRulesetFileName(), this.currentRulesetFileContent);
         }
-        // Uncomment this when the file should be closed after saving
-        // this.setRuleset(-1);
+
         // Switch to an other file (rulesetIndexAfterSaveOrIgnore) when "Save" was clicked
         // because the file should be changed and an other file is already selected
         if (this.rulesetIndexAfterSaveOrIgnore != -1) {
@@ -301,7 +294,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         }
     }
 
-    private boolean checkXML() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    private boolean checkXML() throws ParserConfigurationException, SAXException, IOException {
         boolean ok = true;
 
         List<XMLError> errors = new ArrayList<>();
@@ -327,7 +320,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         return ok;
     }
 
-    private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setValidating(false);
         factory.setNamespaceAware(true);
@@ -337,9 +330,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         builder.setErrorHandler(eh);
 
         try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
-            Document document = builder.parse(bais);
-            XPathFactory xPathFactory = XPathFactory.newInstance();
-            XPath xpath = xPathFactory.newXPath();
+            builder.parse(bais);
         } catch (SAXParseException e) {
             //ignore this, because we collect the errors in the errorhandler and give them to the user.
         }
@@ -439,8 +430,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             StreamSource source = new StreamSource(new StringReader(xml));
             validator.validate(source);
         } catch (Exception e) {
-            if (e instanceof SAXParseException) {
-                SAXParseException se = (SAXParseException) e;
+            if (e instanceof SAXParseException se) {
                 validationErrors.add(new XMLError(se.getLineNumber(), 0, "ERROR", e.getMessage()));
             } else {
                 validationErrors.add(new XMLError(0, 0, "ERROR", e.getMessage()));
