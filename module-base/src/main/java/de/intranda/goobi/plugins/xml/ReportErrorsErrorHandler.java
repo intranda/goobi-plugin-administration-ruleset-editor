@@ -15,7 +15,7 @@ public class ReportErrorsErrorHandler implements ErrorHandler {
     private List<XMLError> errors;
 
     public ReportErrorsErrorHandler() {
-        errors = new ArrayList<XMLError>();
+        errors = new ArrayList<>();
     }
 
     private void addError(SAXParseException e, String severity) {

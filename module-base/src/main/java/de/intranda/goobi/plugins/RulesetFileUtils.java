@@ -31,6 +31,10 @@ public abstract class RulesetFileUtils {
 
     private static Charset standardCharset;
 
+    private RulesetFileUtils() {
+        // hide public default constructor
+    }
+
     public static void init(XMLConfiguration configuration) {
         RulesetFileUtils.rulesetDirectory = ConfigurationHelper.getInstance().getRulesetFolder();
         RulesetFileUtils.backupDirectory = configuration.getString("rulesetBackupDirectory", "/opt/digiverso/goobi/rulesets/backup/");
