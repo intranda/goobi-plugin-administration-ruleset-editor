@@ -352,7 +352,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             XPathFactory xPathFactory = XPathFactory.newInstance();
             XPath xpath = xPathFactory.newXPath();
 
-            validateDocstructTypePartInRuleset.parseAndCheckDocument(document);
+            ValidateDocstructTypePartInRuleset.parseAndCheckDocument(document);
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
