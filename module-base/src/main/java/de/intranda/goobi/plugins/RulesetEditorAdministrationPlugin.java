@@ -29,6 +29,8 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
+import org.jdom2.Element;
+import org.jdom2.input.DOMBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -352,7 +354,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             XPathFactory xPathFactory = XPathFactory.newInstance();
             XPath xpath = xPathFactory.newXPath();
 
-            ValidateDocstructTypePartInRuleset.parseAndCheckDocument(document);
+            DOMBuilder jdomBuilder = new DOMBuilder();
+            org.jdom2.Document jdomDocument = jdomBuilder.build(document);
+            Element root = jdomDocument.getRootElement();
+            validationErrors.addAll(ValidateDuplicates.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
