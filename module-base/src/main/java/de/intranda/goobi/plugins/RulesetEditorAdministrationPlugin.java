@@ -37,6 +37,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import de.intranda.goobi.plugins.validation.ValidateCardinality;
+import de.intranda.goobi.plugins.validation.ValidateDuplicates;
+import de.intranda.goobi.plugins.validation.ValidateGroups;
 import de.intranda.goobi.plugins.xml.ReportErrorsErrorHandler;
 import de.intranda.goobi.plugins.xml.XMLError;
 import de.sub.goobi.config.ConfigPlugins;
@@ -359,7 +362,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             Element root = jdomDocument.getRootElement();
             validationErrors.addAll(ValidateDuplicates.validate(root));
             validationErrors.addAll(ValidateGroups.validate(root));
-            // validationErrors.addAll(ValidateCardinality.validate(root));
+            validationErrors.addAll(ValidateCardinality.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
