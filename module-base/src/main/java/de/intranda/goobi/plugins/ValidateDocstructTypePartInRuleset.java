@@ -32,10 +32,11 @@ class ValidateDocstructTypePartInRuleset {
         Set<String> valueSet = new HashSet<>();
         List<Element> childElements = element.getChildren();
         for (Element childElement : childElements) {
-            String childSignature = childElement.getText();
-            if (valueSet.contains(childSignature) && ("metadata".equals(childElement.getName()) || "group".equals(childElement.getName()))) {
-                // Duplicate found, print a message     
-                System.out.println("Duplicate value found: " + childSignature);
+            String childSignature = childElement.getName() + ":" + childElement.getText();
+            if (valueSet.contains(childSignature) && ("metadata".equals(childElement.getName()) || "group".equals(childElement.getName())
+                    || "allowedchildtype".equals(childElement.getName()))) {
+                // Duplicate found, print a message 
+                System.out.println("Duplicate value found: " + childElement.getText());
             } else {
                 // Add the signature to the set     
                 valueSet.add(childSignature);
