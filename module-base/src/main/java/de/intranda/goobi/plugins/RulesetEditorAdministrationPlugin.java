@@ -359,6 +359,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             Element root = jdomDocument.getRootElement();
             validationErrors.addAll(ValidateDuplicates.validate(root));
             validationErrors.addAll(ValidateGroups.validate(root));
+            // validationErrors.addAll(ValidateCardinality.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");

@@ -14,19 +14,14 @@ class ValidateGroups {
     public static List<XMLError> validate(org.jdom2.Element root) {
         List<XMLError> errors = new ArrayList<>();
         // Check all children of the root element       
-        iterateOverChildElements(errors, root.getChildren());
-        System.out.println(errors);
+        for (Element element : root.getChildren()) {
+            // Check the children of this element       
+            checkForUnvalidGroups(errors, element);
+        }
         return errors;
     }
 
-    private static void iterateOverChildElements(List<XMLError> errors, List<Element> elements) {
-        for (Element element : elements) {
-            // Check the children of this element       
-            checkDocStructNodesForDuplicates(errors, element);
-        }
-    }
-
-    private static void checkDocStructNodesForDuplicates(List<XMLError> errors, Element element) {
+    private static void checkForUnvalidGroups(List<XMLError> errors, Element element) {
         if (!"Group".equals(element.getName())) {
             return;
         }
@@ -36,13 +31,11 @@ class ValidateGroups {
             String childSignature = childElement.getName() + ":" + childElement.getText();
             if (valueSet.contains(childSignature) && ("metadata".equals(childElement.getName()) || ("group".equals(childElement.getName())))) {
                 // Add found to errors List
-                errors.add(new XMLError(0, 0, "Error", "Duplicate value found: " + childElement.getText()));
+                errors.add(new XMLError(0, 0, "ERROR", "Duplicate value found: " + childElement.getText()));
             } else {
                 // Add the signature to the set
                 valueSet.add(childSignature);
             }
         }
-        // Recursively process the children of the current element      
-        iterateOverChildElements(errors, element.getChildren());
     }
 }
