@@ -10,21 +10,29 @@ import de.sub.goobi.helper.Helper;
 
 public class ValidateCardinality {
 
+    /**
+     * Validate the XML structure starting from the root element for not allowed values in the "num" field
+     *
+     * @param root The root XML element to be validated.
+     * @return A list of XMLError objects containing details about any duplicate entries found during validation.
+     */
     public static List<XMLError> validate(org.jdom2.Element root) {
         List<XMLError> errors = new ArrayList<>();
         // Check all children of the root element       
-        iterateOverChildElements(errors, root.getChildren());
+        for (Element element : root.getChildren()) {
+            // Check the children of this element       
+            checkForInvalidCardinatliy(errors, element);
+        }
         return errors;
     }
 
-    private static void iterateOverChildElements(List<XMLError> errors, List<Element> elements) {
-        for (Element element : elements) {
-            // Check the children of this element       
-            checkForUnvalidCardinatliy(errors, element);
-        }
-    }
-
-    private static void checkForUnvalidCardinatliy(List<XMLError> errors, Element element) {
+    /**
+     * Checks the child elements of a given XML element for invalid cardinality values.
+     *
+     * @param errors A list of XMLError objects to collect validation errors.
+     * @param element The XML element to be checked for invalid cardinality.
+     */
+    private static void checkForInvalidCardinatliy(List<XMLError> errors, Element element) {
         List<Element> childElements = element.getChildren();
         Element nameElement = element.getChild("Name");
         for (Element childElement : childElements) {
@@ -35,8 +43,5 @@ public class ValidateCardinality {
                         Helper.getTranslation("ruleset_validation_wrong_cardinality", childElement.getText(), nameElement.getText())));
             }
         }
-
-        // Recursively process the children of the current element      
-        iterateOverChildElements(errors, element.getChildren());
     }
 }

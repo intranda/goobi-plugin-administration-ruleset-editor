@@ -12,6 +12,12 @@ import de.sub.goobi.helper.Helper;
 
 public class ValidateGroups {
 
+    /**
+     * Validate the XML structure starting from the root element for duplicate values in Groups
+     *
+     * @param root The root XML element to be validated.
+     * @return A list of XMLError objects containing details about any duplicate entries found during validation.
+     */
     public static List<XMLError> validate(Element root) {
         List<XMLError> errors = new ArrayList<>();
         // Check all children of the root element       
@@ -22,6 +28,12 @@ public class ValidateGroups {
         return errors;
     }
 
+    /**
+     * Checks a specific XML element and its children for duplicates.
+     *
+     * @param errors A list of XMLError objects to collect validation errors.
+     * @param element The XML element to be checked for duplicates.
+     */
     private static void checkForUnvalidGroups(List<XMLError> errors, Element element) {
         if (!"Group".equals(element.getName())) {
             return;
