@@ -10,6 +10,12 @@ import de.sub.goobi.helper.Helper;
 
 public class ValidateUnusedButDefinedData {
 
+    /**
+     * Validate the XML structure starting from the root element to find unused values
+     *
+     * @param root The root XML element to be validated.
+     * @return A list of XMLError objects containing details about any duplicate entries found during validation.
+     */
     public static List<XMLError> validate(org.jdom2.Element root) {
         List<XMLError> errors = new ArrayList<>();
         List<String> allMetadataTypeNameValues = new ArrayList<>();
@@ -31,24 +37,41 @@ public class ValidateUnusedButDefinedData {
         return errors;
     }
 
+    /**
+     * Add the elements name to allMetadataTypeNameValues
+     * 
+     * @param errors
+     * @param element
+     * @param allMetadataTypeNameValues
+     */
     private static void getAllMetadataTypeNameValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
-        if (!"MetadataType".equals(element.getName())) {
+        if (!"MetadataType".equals(element.getName()) && !"Group".equals(element.getName())) {
             return;
         }
         // Add the Name text to the list
         allMetadataTypeNameValues.add(element.getChild("Name").getText());
     }
 
+    /**
+     * Go through all DocStrctType and Group Elements and if a value of allMetadataTypeNameValues was found it will be removed
+     * 
+     * @param errors
+     * @param element
+     * @param allMetadataTypeNameValues
+     */
     private static void searchInDocstrctTypesForUnusedValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
-        if (!"DocStrctType".equals(element.getName())) {
+        if (!"DocStrctType".equals(element.getName()) && !"Group".equals(element.getName())) {
             return;
         }
+
         // Go trough all child Elements
         List<Element> childElements = element.getChildren();
         for (Element childElement : childElements) {
             // If a value was found it is being used therefore it will be removed from the list
             if (allMetadataTypeNameValues.contains(childElement.getText())) {
-                allMetadataTypeNameValues.remove(childElement.getText());
+                if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
+                    allMetadataTypeNameValues.remove(childElement.getText());
+                }
             }
         }
     }
