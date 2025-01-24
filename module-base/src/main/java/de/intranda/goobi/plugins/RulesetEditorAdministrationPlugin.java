@@ -38,8 +38,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import de.intranda.goobi.plugins.validation.ValidateCardinality;
-import de.intranda.goobi.plugins.validation.ValidateDuplicates;
-import de.intranda.goobi.plugins.validation.ValidateGroups;
+import de.intranda.goobi.plugins.validation.ValidateDuplicatesInDocStrct;
+import de.intranda.goobi.plugins.validation.ValidateDuplicatesInGroups;
 import de.intranda.goobi.plugins.validation.ValidateUnusedButDefinedData;
 import de.intranda.goobi.plugins.xml.ReportErrorsErrorHandler;
 import de.intranda.goobi.plugins.xml.XMLError;
@@ -361,10 +361,14 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             DOMBuilder jdomBuilder = new DOMBuilder();
             org.jdom2.Document jdomDocument = jdomBuilder.build(document);
             Element root = jdomDocument.getRootElement();
-            validationErrors.addAll(ValidateDuplicates.validate(root));
-            validationErrors.addAll(ValidateGroups.validate(root));
-            validationErrors.addAll(ValidateCardinality.validate(root));
-            validationErrors.addAll(ValidateUnusedButDefinedData.validate(root));
+            ValidateDuplicatesInDocStrct validateDuplicatesInDocStrct = new ValidateDuplicatesInDocStrct();
+            validationErrors.addAll(validateDuplicatesInDocStrct.validate(root));
+            ValidateDuplicatesInGroups validateDuplicatesInGroups = new ValidateDuplicatesInGroups();
+            validationErrors.addAll(validateDuplicatesInGroups.validate(root));
+            ValidateCardinality validateCardinality = new ValidateCardinality();
+            validationErrors.addAll(validateCardinality.validate(root));
+            ValidateUnusedButDefinedData validateUnusedButDefinedData = new ValidateUnusedButDefinedData();
+            validationErrors.addAll(validateUnusedButDefinedData.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");

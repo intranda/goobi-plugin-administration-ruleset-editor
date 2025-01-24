@@ -8,6 +8,9 @@ import org.jdom2.Element;
 import de.intranda.goobi.plugins.xml.XMLError;
 import de.sub.goobi.helper.Helper;
 
+/**
+ * Find metadata, groups, persons and corporates which are defined but never actually used and return those into the errors list
+ */
 public class ValidateUnusedButDefinedData {
 
     /**
@@ -16,10 +19,9 @@ public class ValidateUnusedButDefinedData {
      * @param root The root XML element to be validated.
      * @return A list of XMLError objects containing details about any duplicate entries found during validation.
      */
-    public static List<XMLError> validate(org.jdom2.Element root) {
+    public List<XMLError> validate(org.jdom2.Element root) {
         List<XMLError> errors = new ArrayList<>();
         List<String> allMetadataTypeNameValues = new ArrayList<>();
-        // Check all children of the root element       
         for (Element element : root.getChildren()) {
             // Check the children of this element and add them to the list
             getAllMetadataTypeNameValues(errors, element, allMetadataTypeNameValues);
@@ -30,9 +32,7 @@ public class ValidateUnusedButDefinedData {
         }
         // Add all unused values to the errors list
         for (String unusedValue : allMetadataTypeNameValues) {
-            errors.add(
-                    new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values", unusedValue)));
-
+            findMetadataType(errors, root, unusedValue);
         }
         return errors;
     }
@@ -44,7 +44,7 @@ public class ValidateUnusedButDefinedData {
      * @param element
      * @param allMetadataTypeNameValues
      */
-    private static void getAllMetadataTypeNameValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
+    private void getAllMetadataTypeNameValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
         if (!"MetadataType".equals(element.getName()) && !"Group".equals(element.getName())) {
             return;
         }
@@ -59,7 +59,7 @@ public class ValidateUnusedButDefinedData {
      * @param element
      * @param allMetadataTypeNameValues
      */
-    private static void searchInDocstrctTypesForUnusedValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
+    private void searchInDocstrctTypesForUnusedValues(List<XMLError> errors, Element element, List<String> allMetadataTypeNameValues) {
         if (!"DocStrctType".equals(element.getName()) && !"Group".equals(element.getName())) {
             return;
         }
@@ -67,12 +67,49 @@ public class ValidateUnusedButDefinedData {
         // Go trough all child Elements
         List<Element> childElements = element.getChildren();
         for (Element childElement : childElements) {
+
             // If a value was found it is being used therefore it will be removed from the list
-            if (allMetadataTypeNameValues.contains(childElement.getText())) {
-                if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
+            if ("metadata".equals(childElement.getName())) {
+                if (allMetadataTypeNameValues.contains(childElement.getText())) {
                     allMetadataTypeNameValues.remove(childElement.getText());
                 }
+            } else if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
+                allMetadataTypeNameValues.remove(childElement.getText());
             }
+        }
+    }
+
+    /**
+     * Find out if the duplicate value is either a person, corporate or a metadata.
+     * 
+     * @param errors
+     * @param root
+     * @param text
+     * @param childElementText
+     * @param nameElementText
+     */
+    private void findMetadataType(List<XMLError> errors, Element root, String text) {
+        for (Element element : root.getChildren()) {
+
+            String typeAttribute = element.getAttributeValue("type");
+            Element nameChild = element.getChild("Name");
+
+            // Check if the element is a person with the same name 
+            if ("person".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", text)));
+                return;
+            }
+            if ("corporate".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
+                System.out.println("test");
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", text)));
+                return;
+
+                // Check if the element is a metadata with the same name
+            } else if (nameChild != null) {
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_metadata", text)));
+                return;
+            }
+
         }
     }
 }
