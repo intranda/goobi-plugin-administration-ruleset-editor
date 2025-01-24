@@ -85,17 +85,14 @@ public class ValidateDuplicatesInDocStrct {
      */
     private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
         for (Element element : root.getChildren()) {
-
-            String typeAttribute = element.getAttributeValue("type");
             Element nameChild = element.getChild("Name");
 
             // Check if the element is a person with the same name 
-            if ("person".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
+            if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
                 errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
                 return;
             }
-            if ("corporate".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
-                System.out.println("test");
+            if ("corporate".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
                 errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
                 return;
 

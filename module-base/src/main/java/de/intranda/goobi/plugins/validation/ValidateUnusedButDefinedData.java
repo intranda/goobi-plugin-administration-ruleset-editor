@@ -91,25 +91,20 @@ public class ValidateUnusedButDefinedData {
     private void findMetadataType(List<XMLError> errors, Element root, String text) {
         for (Element element : root.getChildren()) {
 
-            String typeAttribute = element.getAttributeValue("type");
             Element nameChild = element.getChild("Name");
 
-            // Check if the element is a person with the same name 
-            if ("person".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", text)));
+            if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_person", text)));
+                return;
+            } else if ("corporate".equals(element.getAttributeValue("type")) && nameChild.equals(text)) {
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_corporate", text)));
                 return;
             }
-            if ("corporate".equals(typeAttribute) && nameChild != null && text.equals(nameChild.getText())) {
-                System.out.println("test");
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", text)));
-                return;
-
-                // Check if the element is a metadata with the same name
-            } else if (nameChild != null) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_metadata", text)));
+            if (nameChild != null) {
+                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_metadata", text)));
                 return;
             }
-
         }
     }
+
 }
