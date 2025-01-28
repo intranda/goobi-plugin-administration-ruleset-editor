@@ -30,6 +30,7 @@ public class ValidateUnusedButDefinedData {
             // Go through all children of the element and search for unused values
             searchInDocstrctTypesForUnusedValues(errors, element, allMetadataTypeNameValues);
         }
+        System.out.println(allMetadataTypeNameValues);
         // Add all unused values to the errors list
         for (String unusedValue : allMetadataTypeNameValues) {
             findMetadataType(errors, root, unusedValue);
@@ -73,10 +74,19 @@ public class ValidateUnusedButDefinedData {
                     allMetadataTypeNameValues.remove(childElement.getText());
                 }
             }
+
+            // Group used in same group
             if ("Group".equals(element.getName())) {
-                if ("group".equals(childElement.getName()) && allMetadataTypeNameValues.contains(childElement.getText())) {
-                    allMetadataTypeNameValues.remove(childElement.getText());
+                if ("group".equals(childElement.getName())) {
+                    if ("group".equals(childElement.getName()) && allMetadataTypeNameValues.contains(childElement.getText())) {
+                        System.out.println(childElement.getText());
+                        allMetadataTypeNameValues.remove(childElement.getText());
+                    }
                 }
+            }
+            // Groups in DocstrcyTypes
+            else if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
+                allMetadataTypeNameValues.remove(childElement.getText());
             }
 
         }
@@ -101,22 +111,20 @@ public class ValidateUnusedButDefinedData {
 
                 if ("person".equals(type)) {
                     errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_person", text)));
-                    break;
+                    return;
                 }
 
                 if ("corporate".equals(type)) {
                     errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_corporate", text)));
-                    break;
+                    return;
                 }
 
                 if ("Group".equals(element.getName())) {
                     errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_groups", text)));
-                    break;
-                }
-
-                if (type == null || type.isEmpty()) {
+                    return;
+                } else {
                     errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_metadata", text)));
-                    break;
+                    return;
                 }
             }
         }
