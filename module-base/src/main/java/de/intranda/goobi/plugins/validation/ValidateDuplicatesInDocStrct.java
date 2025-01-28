@@ -50,7 +50,7 @@ public class ValidateDuplicatesInDocStrct {
                 // Check if the child element name is "metadata"
                 if ("metadata".equals(childElement.getName())) {
                     // Check if the found duplicate value is a person, corporate or metadata
-                    findMetadataType(errors, root, childElement.getText(), childElement.getText(), nameElement.getText());
+                    findMetadataType(errors, root, childElement.getText(), nameElement.getText());
 
                 }
                 // Check if the child element name is "group"
@@ -83,25 +83,33 @@ public class ValidateDuplicatesInDocStrct {
      * @param childElementText
      * @param nameElementText
      */
-    private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
+    private void findMetadataType(List<XMLError> errors, Element root, String childElementText, String nameElementText) {
         for (Element element : root.getChildren()) {
-            Element nameChild = element.getChild("Name");
-
-            // Check if the element is a person with the same name 
-            if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
+            if (!"MetadataType".equals(element.getName())) {
                 return;
             }
-            if ("corporate".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
-                return;
+            String nameValue = element.getChildText("Name");
+            if (childElementText.equals(nameValue)) {
+                String typeValue = element.getAttributeValue("type");
 
-                // Check if the element is a metadata with the same name
-            } else if (nameChild != null) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_metadata", childElementText, nameElementText)));
-                return;
+                if (typeValue.equals("person")) {
+                    errors.add(
+                            new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
+                    return;
+                }
+                if (typeValue.equals("corporate")) {
+                    errors.add(
+                            new XMLError("ERROR",
+                                    Helper.getTranslation("ruleset_validation_duplicates_corporate", childElementText, nameElementText)));
+                    return;
+
+                } else {
+                    errors.add(new XMLError("ERROR",
+                            Helper.getTranslation("ruleset_validation_duplicates_metadata", childElementText, nameElementText)));
+                    return;
+                }
+
             }
-
         }
     }
 }

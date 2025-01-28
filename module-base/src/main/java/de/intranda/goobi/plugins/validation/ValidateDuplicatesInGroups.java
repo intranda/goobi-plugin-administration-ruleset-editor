@@ -75,9 +75,13 @@ public class ValidateDuplicatesInGroups {
      * @param nameElementText
      */
     private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
+
         for (Element element : root.getChildren()) {
 
             Element nameChild = element.getChild("Name");
+            if (nameChild == null) {
+                continue;
+            }
 
             // Check if the element is a person with the same name 
             if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
@@ -91,7 +95,6 @@ public class ValidateDuplicatesInGroups {
                         Helper.getTranslation("ruleset_validation_duplicates_group_corporate", childElementText, nameElementText)));
                 return;
 
-                // Check if the element is a metadata with the same name
             } else if (nameChild != null && text.equals(nameChild.getText())) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElementText, nameElementText)));

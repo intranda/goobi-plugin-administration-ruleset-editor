@@ -67,15 +67,18 @@ public class ValidateUnusedButDefinedData {
         // Go trough all child Elements
         List<Element> childElements = element.getChildren();
         for (Element childElement : childElements) {
-
             // If a value was found it is being used therefore it will be removed from the list
             if ("metadata".equals(childElement.getName())) {
                 if (allMetadataTypeNameValues.contains(childElement.getText())) {
                     allMetadataTypeNameValues.remove(childElement.getText());
                 }
-            } else if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
-                allMetadataTypeNameValues.remove(childElement.getText());
             }
+            if ("Group".equals(element.getName())) {
+                if ("group".equals(childElement.getName()) && allMetadataTypeNameValues.contains(childElement.getText())) {
+                    allMetadataTypeNameValues.remove(childElement.getText());
+                }
+            }
+
         }
     }
 
@@ -89,20 +92,32 @@ public class ValidateUnusedButDefinedData {
      * @param nameElementText
      */
     private void findMetadataType(List<XMLError> errors, Element root, String text) {
-        for (Element element : root.getChildren()) {
 
+        for (Element element : root.getChildren()) {
             Element nameChild = element.getChild("Name");
 
-            if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_person", text)));
-                return;
-            } else if ("corporate".equals(element.getAttributeValue("type")) && nameChild.equals(text)) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_corporate", text)));
-                return;
-            }
-            if (nameChild != null) {
-                errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_metadata", text)));
-                return;
+            if (nameChild != null && text.equals(nameChild.getText())) {
+                String type = element.getAttributeValue("type");
+
+                if ("person".equals(type)) {
+                    errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_person", text)));
+                    break;
+                }
+
+                if ("corporate".equals(type)) {
+                    errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_corporate", text)));
+                    break;
+                }
+
+                if ("Group".equals(element.getName())) {
+                    errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_groups", text)));
+                    break;
+                }
+
+                if (type == null || type.isEmpty()) {
+                    errors.add(new XMLError("ERROR", Helper.getTranslation("ruleset_validation_unused_values_metadata", text)));
+                    break;
+                }
             }
         }
     }
