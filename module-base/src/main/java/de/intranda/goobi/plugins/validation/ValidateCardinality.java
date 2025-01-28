@@ -37,6 +37,10 @@ public class ValidateCardinality {
         List<Element> childElements = element.getChildren();
         Element nameElement = element.getChild("Name");
         for (Element childElement : childElements) {
+            // Skip elements that are not "group" or "metadata"
+            if (!"group".equals(childElement.getName()) && !"metadata".equals(childElement.getName())) {
+                continue;
+            }
             String attributeValue = childElement.getAttributeValue("num");
             if (attributeValue != null && !"1o".equals(attributeValue) && !"*".equals(attributeValue) && !"1m".equals(attributeValue)
                     && !"+".equals(attributeValue)) {

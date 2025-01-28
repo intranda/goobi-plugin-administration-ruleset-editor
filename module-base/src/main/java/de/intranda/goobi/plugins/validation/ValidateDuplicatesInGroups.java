@@ -42,21 +42,25 @@ public class ValidateDuplicatesInGroups {
         Set<String> valueSet = new HashSet<>();
         List<Element> childElements = element.getChildren();
         Element nameElement = element.getChild("Name");
+        String nameText = (nameElement != null) ? nameElement.getText().trim() : "";
+
         for (Element childElement : childElements) {
-            String childSignature = childElement.getName() + ":" + childElement.getText();
+            String childName = childElement.getName().trim();
+            String childText = childElement.getText().trim();
+            String childSignature = childName + ":" + childText;
+
             if (valueSet.contains(childSignature)) {
 
                 // Check if the child element name is "metadata"
-                if ("metadata".equals(childElement.getName())) {
-                    findMetadataType(errors, root, childElement.getText(), childElement.getText(), nameElement.getText());
+                if ("metadata".equals(childName)) {
+                    findMetadataType(errors, root, childText, childText, nameText);
                 }
                 // Check if the child element name is "group"
-                else if ("group".equals(childElement.getName())) {
-
+                else if ("group".equals(childName)) {
                     errors.add(
                             new XMLError("ERROR",
-                                    Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElement.getText(),
-                                            nameElement.getText())));
+                                    Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childText,
+                                            nameText)));
                 }
             } else {
                 // Add the signature to the set
@@ -75,32 +79,33 @@ public class ValidateDuplicatesInGroups {
      * @param nameElementText
      */
     private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
-
         for (Element element : root.getChildren()) {
-
-            Element nameChild = element.getChild("Name");
-            if (nameChild == null) {
+            if ((!("metadata".equals(element.getName()) || "group".equals(element.getName()))) || element.getChild("Name") == null) {
                 continue;
             }
 
+            Element nameChild = element.getChild("Name");
+            String trimmedNameChildText = nameChild.getText().trim();
+            String trimmedText = text.trim();
+
             // Check if the element is a person with the same name 
-            if ("person".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
+            if ("person".equals(element.getAttributeValue("type")) && trimmedText.equals(trimmedNameChildText)) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_person", childElementText, nameElementText)));
                 return;
             }
 
-            if ("corporate".equals(element.getAttributeValue("type")) && nameChild != null && text.equals(nameChild.getText())) {
+            if ("corporate".equals(element.getAttributeValue("type")) && trimmedText.equals(trimmedNameChildText)) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_corporate", childElementText, nameElementText)));
                 return;
+            }
 
-            } else if (nameChild != null && text.equals(nameChild.getText())) {
+            if (trimmedText.equals(trimmedNameChildText)) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElementText, nameElementText)));
                 return;
             }
-
         }
     }
 }

@@ -50,7 +50,7 @@ public class ValidateUnusedButDefinedData {
             return;
         }
         // Add the Name text to the list
-        allMetadataTypeNameValues.add(element.getChild("Name").getText());
+        allMetadataTypeNameValues.add(element.getChild("Name").getText().trim());
     }
 
     /**
@@ -84,7 +84,7 @@ public class ValidateUnusedButDefinedData {
                 }
             }
             // Groups in DocstrcyTypes
-            else if (!(element.getName().equals("Group") && childElement.getText().equals(element.getChildText("Name")))) {
+            else if (!childElement.getText().equals(element.getChildText("Name"))) {
                 allMetadataTypeNameValues.remove(childElement.getText());
             }
 
@@ -103,9 +103,12 @@ public class ValidateUnusedButDefinedData {
     private void findMetadataType(List<XMLError> errors, Element root, String text) {
 
         for (Element element : root.getChildren()) {
+            if (!"group".equals(element.getName()) && !"metadata".equals(element.getName())) {
+                continue;
+            }
             Element nameChild = element.getChild("Name");
 
-            if (nameChild != null && text.equals(nameChild.getText())) {
+            if (nameChild != null && text.trim().equals(nameChild.getText().trim())) {
                 String type = element.getAttributeValue("type");
 
                 if ("person".equals(type)) {

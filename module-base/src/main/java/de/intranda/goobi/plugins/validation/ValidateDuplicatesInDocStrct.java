@@ -42,36 +42,37 @@ public class ValidateDuplicatesInDocStrct {
         Set<String> valueSet = new HashSet<>();
         List<Element> childElements = element.getChildren();
         Element nameElement = element.getChild("Name");
+        String nameText = (nameElement != null) ? nameElement.getText().trim() : "";
+
         for (Element childElement : childElements) {
-            String childSignature = childElement.getName() + ":" + childElement.getText();
+            String childName = childElement.getName();
+            String childText = childElement.getText().trim();
+            String childSignature = childName + ":" + childText;
 
             // Check if the childSignature already exists in the set
             if (valueSet.contains(childSignature)) {
                 // Check if the child element name is "metadata"
-                if ("metadata".equals(childElement.getName())) {
+                if ("metadata".equals(childName)) {
                     // Check if the found duplicate value is a person, corporate or metadata
-                    findMetadataType(errors, root, childElement.getText(), nameElement.getText());
+                    findMetadataType(errors, root, childText, nameText);
 
                 }
                 // Check if the child element name is "group"
-                else if ("group".equals(childElement.getName())) {
+                else if ("group".equals(childName)) {
                     errors.add(
                             new XMLError("ERROR",
-                                    Helper.getTranslation("ruleset_validation_duplicates_group_group", childElement.getText(),
-                                            nameElement.getText())));
+                                    Helper.getTranslation("ruleset_validation_duplicates_group_group", childText, nameText)));
                 }
                 // Check if the child element name is "allowedchildtype"
-                else if ("allowedchildtype".equals(childElement.getName())) {
+                else if ("allowedchildtype".equals(childName)) {
                     errors.add(new XMLError("ERROR",
-                            Helper.getTranslation("ruleset_validation_duplicates_group_allowedchildtype", childElement.getText(),
-                                    nameElement.getText())));
+                            Helper.getTranslation("ruleset_validation_duplicates_group_allowedchildtype", childText, nameText)));
                 }
             } else {
                 // Add the signature to the set     
                 valueSet.add(childSignature);
             }
         }
-
     }
 
     /**
@@ -85,19 +86,20 @@ public class ValidateDuplicatesInDocStrct {
      */
     private void findMetadataType(List<XMLError> errors, Element root, String childElementText, String nameElementText) {
         for (Element element : root.getChildren()) {
-            if (!"MetadataType".equals(element.getName())) {
-                return;
+            if (!"MetadataType".equals(element.getName()) && !"group".equals(element.getName()) && !"metadata".equals(element.getName())) {
+                continue;
             }
+
             String nameValue = element.getChildText("Name");
-            if (childElementText.equals(nameValue)) {
+            if (nameValue != null && childElementText.equals(nameValue.trim())) {
                 String typeValue = element.getAttributeValue("type");
 
-                if (typeValue.equals("person")) {
+                if ("person".equals(typeValue)) {
                     errors.add(
                             new XMLError("ERROR", Helper.getTranslation("ruleset_validation_duplicates_person", childElementText, nameElementText)));
                     return;
                 }
-                if (typeValue.equals("corporate")) {
+                if ("corporate".equals(typeValue)) {
                     errors.add(
                             new XMLError("ERROR",
                                     Helper.getTranslation("ruleset_validation_duplicates_corporate", childElementText, nameElementText)));
@@ -108,8 +110,8 @@ public class ValidateDuplicatesInDocStrct {
                             Helper.getTranslation("ruleset_validation_duplicates_metadata", childElementText, nameElementText)));
                     return;
                 }
-
             }
         }
     }
+
 }
