@@ -361,14 +361,14 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             DOMBuilder jdomBuilder = new DOMBuilder();
             org.jdom2.Document jdomDocument = jdomBuilder.build(document);
             Element root = jdomDocument.getRootElement();
-            ValidateDuplicatesInDocStrct validateDuplicatesInDocStrct = new ValidateDuplicatesInDocStrct();
-            validationErrors.addAll(validateDuplicatesInDocStrct.validate(root));
-            ValidateDuplicatesInGroups validateDuplicatesInGroups = new ValidateDuplicatesInGroups();
-            validationErrors.addAll(validateDuplicatesInGroups.validate(root));
-            ValidateCardinality validateCardinality = new ValidateCardinality();
-            validationErrors.addAll(validateCardinality.validate(root));
-            ValidateUnusedButDefinedData validateUnusedButDefinedData = new ValidateUnusedButDefinedData();
-            validationErrors.addAll(validateUnusedButDefinedData.validate(root));
+            ValidateDuplicatesInDocStrct v1 = new ValidateDuplicatesInDocStrct();
+            validationErrors.addAll(v1.validate(root));
+            ValidateDuplicatesInGroups v2 = new ValidateDuplicatesInGroups();
+            validationErrors.addAll(v2.validate(root));
+            ValidateCardinality v3 = new ValidateCardinality();
+            validationErrors.addAll(v3.validate(root));
+            ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
+            validationErrors.addAll(v4.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
