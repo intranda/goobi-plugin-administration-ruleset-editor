@@ -322,6 +322,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setValidating(false);
         factory.setNamespaceAware(true);
 
@@ -340,6 +341,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     private void checkRulesetValid(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setValidating(false);
         factory.setNamespaceAware(true);
 
