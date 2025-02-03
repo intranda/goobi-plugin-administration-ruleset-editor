@@ -10,6 +10,9 @@ import de.sub.goobi.helper.Helper;
 
 /**
  * Find Cardinality values in the <DocStrctType> elements which are not equal to "1o", "*", "1m" or "+" and return those into the errors list
+ * 
+ * @author Paul Hankiewicz Lopez
+ * @version 28.01.2025
  */
 public class ValidateCardinality {
 

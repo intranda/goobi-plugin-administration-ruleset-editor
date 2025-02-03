@@ -380,13 +380,6 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             errorDescription = Helper.getTranslation("ruleset_validation_empty_translation");
             checkIssuesViaXPath(xpath, document, "//language[.='']/../Name", "ERROR", errorDescription);
 
-            // ERROR: metadata used twice inside of structure element
-            errorDescription = Helper.getTranslation("ruleset_validation_metadata_used_twice_inside_of_structure_element");
-            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]",
-                    "ERROR", errorDescription);
-            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]/../Name", "ERROR",
-                    errorDescription);
-
             // WARNING: defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_metadata_defined_twice");
             checkIssuesViaXPath(xpath, document, "//MetadataType/Name[.=preceding::MetadataType/Name]", "WARNING", errorDescription);

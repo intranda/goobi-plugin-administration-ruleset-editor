@@ -12,6 +12,9 @@ import de.sub.goobi.helper.Helper;
 
 /**
  * Find duplicate metadata and group values in <Groups> and return those into the error list
+ * 
+ * @author Paul Hankiewicz Lopez
+ * @version 28.01.2025
  */
 public class ValidateDuplicatesInGroups {
 
@@ -80,10 +83,9 @@ public class ValidateDuplicatesInGroups {
      */
     private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
         for (Element element : root.getChildren()) {
-            if ((!("metadata".equals(element.getName()) || "group".equals(element.getName()))) || element.getChild("Name") == null) {
+            if (!"MetadataType".equals(element.getName()) || element.getChild("Name") == null) {
                 continue;
             }
-
             Element nameChild = element.getChild("Name");
             String trimmedNameChildText = nameChild.getText().trim();
             String trimmedText = text.trim();
