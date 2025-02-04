@@ -14,7 +14,7 @@ import de.sub.goobi.helper.Helper;
  * Find duplicate metadata and group values in <Groups> and return those into the error list
  * 
  * @author Paul Hankiewicz Lopez
- * @version 28.01.2025
+ * @version 04.02.2025
  */
 public class ValidateDuplicatesInGroups {
 
@@ -56,7 +56,7 @@ public class ValidateDuplicatesInGroups {
 
                 // Check if the child element name is "metadata"
                 if ("metadata".equals(childName)) {
-                    findMetadataType(errors, root, childText, childText, nameText);
+                    findMetadataType(errors, root, childText, nameText);
                 }
                 // Check if the child element name is "group"
                 else if ("group".equals(childName)) {
@@ -81,33 +81,34 @@ public class ValidateDuplicatesInGroups {
      * @param childElementText
      * @param nameElementText
      */
-    private void findMetadataType(List<XMLError> errors, Element root, String text, String childElementText, String nameElementText) {
+    private void findMetadataType(List<XMLError> errors, Element root, String childElementText, String nameElementText) {
+
         for (Element element : root.getChildren()) {
+
             if (!"MetadataType".equals(element.getName()) || element.getChild("Name") == null) {
                 continue;
             }
+
             Element nameChild = element.getChild("Name");
-            String trimmedNameChildText = nameChild.getText().trim();
-            String trimmedText = text.trim();
 
             // Check if the element is a person with the same name 
-            if ("person".equals(element.getAttributeValue("type")) && trimmedText.equals(trimmedNameChildText)) {
+            if ("person".equals(element.getAttributeValue("type")) && childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_person", childElementText, nameElementText)));
                 return;
             }
 
-            if ("corporate".equals(element.getAttributeValue("type")) && trimmedText.equals(trimmedNameChildText)) {
+            if ("corporate".equals(element.getAttributeValue("type")) && childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_corporate", childElementText, nameElementText)));
                 return;
-            }
 
-            if (trimmedText.equals(trimmedNameChildText)) {
+            } else if (childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElementText, nameElementText)));
                 return;
             }
+
         }
     }
 }

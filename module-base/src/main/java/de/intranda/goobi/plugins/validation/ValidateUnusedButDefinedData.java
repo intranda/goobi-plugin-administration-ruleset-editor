@@ -13,7 +13,7 @@ import de.sub.goobi.helper.Helper;
  * Find metadata, groups, persons and corporates which are defined but never actually used and return those into the errors list
  * 
  * @author Paul Hankiewicz Lopez
- * @version 28.01.2025
+ * @version 04.02.2025
  */
 public class ValidateUnusedButDefinedData {
 
@@ -43,6 +43,8 @@ public class ValidateUnusedButDefinedData {
         }
         for (String unusedValue : allAllowedchildtypeValues) {
             for (Element element : root.getChildren()) {
+                // Check if the element is a DocStrctType and if the Name value is inside the allAllowedchildtypeValues. 
+                // If so it will be added to allUnusedAllowedchildtypeValues and a message will be displayed 
                 if ("DocStrctType".equals(element.getName()) && allAllowedchildtypeValues.contains(element.getChildText("Name").trim())
                         && !allUnusedAllowedchildtypeValues.contains(unusedValue)) {
                     allUnusedAllowedchildtypeValues.add(unusedValue);
@@ -69,6 +71,10 @@ public class ValidateUnusedButDefinedData {
         } else if ("DocStrctType".equals(element.getName())) {
             List<Element> allowedChildTypeElements = element.getChildren("Name");
             for (Element child : allowedChildTypeElements) {
+                String topStructValue = element.getAttributeValue("topStruct");
+                if (topStructValue != null && topStructValue.equals("true")) {
+                    continue;
+                }
                 allAllowedchildtypeValues.add(child.getText().trim());
             }
         }

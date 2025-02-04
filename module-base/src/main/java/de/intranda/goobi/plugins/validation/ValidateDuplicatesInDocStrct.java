@@ -14,7 +14,7 @@ import de.sub.goobi.helper.Helper;
  * Find duplicate metadata, group and allowedChildType values in <DocstrctType> Element and return those into the errors list
  * 
  * @author Paul Hankiewicz Lopez
- * @version 28.01.2025
+ * @version 04.02.2025
  */
 public class ValidateDuplicatesInDocStrct {
 
