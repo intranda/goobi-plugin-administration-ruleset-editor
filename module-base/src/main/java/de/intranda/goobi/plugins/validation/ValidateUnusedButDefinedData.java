@@ -28,6 +28,9 @@ public class ValidateUnusedButDefinedData {
         List<String> allMetadataTypeNameValues = new ArrayList<>();
         List<String> allAllowedchildtypeValues = new ArrayList<>();
         List<String> allUnusedAllowedchildtypeValues = new ArrayList<>();
+        List<String> allFormatChildrenNameValues = new ArrayList<>();
+        List<String> allDefinedFormatChildrenNameValues = new ArrayList<>();
+
         for (Element element : root.getChildren()) {
             // Check the children of this element and add them to the list
             getAllMetadataTypeNameValues(errors, element, allMetadataTypeNameValues, allAllowedchildtypeValues);
@@ -35,6 +38,44 @@ public class ValidateUnusedButDefinedData {
         for (Element element : root.getChildren()) {
             // Go through all children of the element and search for unused values
             searchInDocstrctTypesForUnusedValues(errors, element, allMetadataTypeNameValues, allAllowedchildtypeValues);
+        }
+        for (Element element : root.getChildren()) {
+            // Only go through the elements under the Formats Element and add the "Name" and "InternalName" values to the allFormatChildrenNameValues list
+            if ("Formats".equals(element.getName())) {
+                for (Element ChildElement : element.getChildren()) {
+                    if (ChildElement.getName().equals("LIDO")) {
+                        continue;
+                    }
+                    for (Element ChildElement2 : ChildElement.getChildren()) {
+                        if (ChildElement2.getChild("Name") != null) {
+                            allFormatChildrenNameValues.add(ChildElement2.getChild("Name").getText().trim());
+                        } else if (ChildElement2.getChild("InternalName") != null) {
+                            allFormatChildrenNameValues.add(ChildElement2.getChild("InternalName").getText().trim());
+                        }
+                    }
+                }
+            }
+        }
+        for (Element element : root.getChildren()) {
+            if ("Formats".equals(element.getName())) {
+                continue;
+            }
+            String name = element.getChild("Name").getText().trim();
+
+            // If this Value is being used add it to the allUsedFormatChildrenNameValues list
+            if (allFormatChildrenNameValues.contains(name) && !allDefinedFormatChildrenNameValues.contains(name)) {
+                allDefinedFormatChildrenNameValues.add(name);
+            }
+        }
+        // Go through all list elements in allFormatChildrenNameValues and if they are not 
+        // in the allDefinedFormatChildrenNameValues list they are used but not defined
+        for (String formatChildrenNameValue : allFormatChildrenNameValues) {
+            if (allDefinedFormatChildrenNameValues.contains(formatChildrenNameValue)) {
+                continue;
+            } else {
+                errors.add(new XMLError("ERROR",
+                        Helper.getTranslation("ruleset_validation_used_but_undefined_value_for_export", formatChildrenNameValue)));
+            }
         }
 
         // Add all unused values to the errors list
