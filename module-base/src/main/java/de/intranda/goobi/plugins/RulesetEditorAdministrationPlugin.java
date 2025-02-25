@@ -371,7 +371,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
             validationErrors.addAll(v4.validate(root));
             ValidateFormats v5 = new ValidateFormats();
-            validationErrors.addAll(v5.validate(root));
+            validationErrors.addAll(v5.validate(root, "METS", "InternalName"));
+            validationErrors.addAll(v5.validate(root, "LIDO", "InternalName"));
+            validationErrors.addAll(v5.validate(root, "Marc", "Name"));
+            validationErrors.addAll(v5.validate(root, "PicaPlus", "Name"));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");

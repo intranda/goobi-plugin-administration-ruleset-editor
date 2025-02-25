@@ -5,149 +5,68 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jdom2.Element;
+import org.jdom2.filter.Filters;
+import org.jdom2.xpath.XPathExpression;
+import org.jdom2.xpath.XPathFactory;
 
 import de.intranda.goobi.plugins.xml.XMLError;
 import de.sub.goobi.helper.Helper;
 
 public class ValidateFormats {
-    public List<XMLError> validate(org.jdom2.Element root) {
+
+    /**
+     * Validates the structure of an XML document by checking the export formats
+     *
+     * @param root The root element of the XML document to validate.
+     * @param format The format of the export part which will be checked
+     * @param name This value is either "name" or "InternalName" depends on the format
+     * @return A list of {@link XMLError} objects containing validation errors, if any.
+     */
+    public List<XMLError> validate(Element root, String format, String name) {
         List<XMLError> errors = new ArrayList<>();
+        checkElements(root, errors, "DocStruct", "DocStrctType", format, name);
+        checkElements(root, errors, "Metadata", "MetadataType", format, name);
 
-        for (Element element : root.getChildren()) {
-            if ("Formats".equals(element.getName())) {
-                for (Element ChildElement : element.getChildren()) {
-                    System.out.println(ChildElement.getName());
-
-                    List<String> formatChildrenNameValues = new ArrayList<>();
-                    if (ChildElement.getName().equals("PicaPlus")) {
-
-                    } else if (ChildElement.getName().equals("Marc")) {
-
-                        validateMarc(root, ChildElement, formatChildrenNameValues);
-                        throwErrors(errors, "Marc", formatChildrenNameValues);
-                        System.out.println(formatChildrenNameValues);
-                        formatChildrenNameValues.clear();
-
-                    } else if (ChildElement.getName().equals("METS")) {
-
-                        validateMETS(root, ChildElement, formatChildrenNameValues);
-                        throwErrors(errors, "METS", formatChildrenNameValues);
-                        formatChildrenNameValues.clear();
-
-                    } else if (ChildElement.getName().equals("LIDO")) {
-
-                    }
-                }
-            }
+        // In the following cases there is a <Person> value which also has to be checked
+        if (format.equals("PicaPlus") || format.equals("Marc")) {
+            checkElements(root, errors, "Person", "MetadataType", format, name);
         }
+        checkElements(root, errors, "Group", "Group", format, name);
         return errors;
     }
 
-    private void validateMarc(Element root, Element childElement, List<String> formatChildrenNameValues) {
-        for (Element ChildChildElement : childElement.getChildren()) {
-            // Only do this, if the ChildChild element is named Metadata, Group or DocStruct
-            if (ChildChildElement.getName().equals("Metadata") || ChildChildElement.getName().equals("Group")
-                    || ChildChildElement.getName().equals("DocStruct") || ChildChildElement.getName().equals("Person")) {
+    /**
+     * Checks if specific export elements in the given XML document are defined but not used.
+     *
+     * @param root The root element of the XML document.
+     * @param errors A list of {@link XMLError} objects to which validation errors are added.
+     * @param type The type of the XML element to check (e.g., "DocStruct", "Metadata", "Person").
+     * @param definition The expected definition of the element (e.g., "DocStrctType", "MetadataType").
+     * @param format The format of the XML document.
+     * @param name This value is either "name" or "InternalName" depends on the format
+     */
+    private void checkElements(Element root, List<XMLError> errors, String type, String definition, String format, String name) {
+        XPathFactory xpfac = XPathFactory.instance();
+        XPathExpression<Element> xp = xpfac.compile("//Formats//" + format + "//" + type, Filters.element());
+        List<Element> Elements = xp.evaluate(root);
 
-                // Grab the InternalName Value of the ChildChildElement
-                if (ChildChildElement.getChild("Name") != null) {
-                    String childChildName = ChildChildElement.getName() + ":" + ChildChildElement.getChild("Name").getText().trim();
-                    formatChildrenNameValues.add(childChildName);
-                    for (Element element2 : root.getChildren()) {
-                        if (childChildName == null || childChildName.isEmpty() || element2.getChild("Name") == null) {
-                            continue;
-                        }
-                        // If the "name" equals MetadataType then 
-                        if (("MetadataType".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1)))
-                                && formatChildrenNameValues.contains(childChildName)) {
-                            if (childChildName.substring(0, childChildName.indexOf(":")).equals(("Person"))) {
-                                if (element2.getAttributeValue("type") != null && "person".equals(element2.getAttributeValue("type"))) {
-                                    formatChildrenNameValues.remove(childChildName);
-                                }
-
-                            } else {
-                                formatChildrenNameValues.remove(childChildName);
-                            }
-                            continue;
-                        } else if ("Group".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1))
-                                && formatChildrenNameValues.contains("Group:" + childChildName)) {
-                            formatChildrenNameValues.remove("Group:" + childChildName);
-                        } else if ("DocStrctType".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1))
-                                && formatChildrenNameValues.contains("DocStrctType:" + childChildName)) {
-                            formatChildrenNameValues.remove("DocStrctType:" + childChildName);
-                        }
-                    }
-                }
-            }
-
-        }
-
-    }
-
-    private void validateMETS(Element root, Element childElement, List<String> formatChildrenNameValues) {
-        for (Element ChildChildElement : childElement.getChildren()) {
-            // Only do this, if the ChildChild element is named Metadata, Group or DocStruct
-            if (ChildChildElement.getName().equals("Metadata") || ChildChildElement.getName().equals("Group")
-                    || ChildChildElement.getName().equals("DocStruct")) {
-
-                // Grab the InternalName Value of the ChildChildElement
-                if (ChildChildElement.getChild("InternalName") != null) {
-                    String childChildName = ChildChildElement.getName() + ":" + ChildChildElement.getChild("InternalName").getText().trim();
-                    formatChildrenNameValues.add(childChildName);
-                    for (Element element2 : root.getChildren()) {
-                        if (childChildName == null || childChildName.isEmpty() || element2.getChild("Name") == null) {
-                            continue;
-                        }
-                        // If the "name" equals MetadataType then 
-                        if (("MetadataType".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1)))
-                                && formatChildrenNameValues.contains(childChildName)) {
-                            formatChildrenNameValues.remove(childChildName);
-                            continue;
-                        } else if ("Group".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1))
-                                && formatChildrenNameValues.contains("Group:" + childChildName)) {
-                            formatChildrenNameValues.remove("Group:" + childChildName);
-                        } else if ("DocStrctType".equals(element2.getName())
-                                && element2.getChildText("Name").equals(childChildName.substring(childChildName.indexOf(":") + 1))
-                                && formatChildrenNameValues.contains("DocStrctType:" + childChildName)) {
-                            formatChildrenNameValues.remove("DocStrctType:" + childChildName);
-                        }
-                    }
-                }
-            }
-
-        }
-
-    }
-
-    private void throwErrors(List<XMLError> errors, String formatType, List<String> formatChildrenNameValues) {
-        for (int i = 0; i < formatChildrenNameValues.size(); i++) {
-            String formatChildrenValue = formatChildrenNameValues.get(i);
-            int colonIndex = formatChildrenValue.indexOf(":");
-            if (colonIndex != -1) {
-                String beforeColon = formatChildrenValue.substring(0, colonIndex).trim();
-                String afterColon = formatChildrenValue.substring(colonIndex + 1).trim();
-                if (beforeColon.equals("Metadata")) {
+        // run through all elements in formats section
+        for (Element element : Elements) {
+            String formatName = element.getChild(name).getText().trim();
+            XPathExpression<Element> xp1 = xpfac.compile("//" + definition + "[Name='" + formatName + "']", Filters.element());
+            if (type.equals("Person")) {
+                XPathExpression<Element> xp2 = xpfac.compile("//MetadataType[@type='person' and Name='" + formatName + "']", Filters.element());
+                if (xp1.evaluate(root).size() < 1 && xp2.evaluate(root).size() < 1) {
                     errors.add(new XMLError("ERROR",
-                            Helper.getTranslation("ruleset_validation_used_but_undefined_value_for_export", afterColon, formatType)));
-                } else if (beforeColon.equals("Group")) {
-                    errors.add(new XMLError("ERROR",
-                            Helper.getTranslation("ruleset_validation_used_but_undefined_group_for_export", afterColon, formatType)));
-                } else if (beforeColon.equals("DocStruct")) {
-                    errors.add(new XMLError("ERROR",
-                            Helper.getTranslation("ruleset_validation_used_but_undefined_docstrct_for_export", afterColon, formatType)));
-                } else if (beforeColon.equals("Person")) {
-                    errors.add(new XMLError("ERROR",
-                            Helper.getTranslation("ruleset_validation_used_but_undefined_person_for_export", afterColon, formatType)));
+                            Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
+                                    formatName, format)));
                 }
 
+            } else if (xp1.evaluate(root).size() < 1) {
+                errors.add(new XMLError("ERROR",
+                        Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
+                                formatName, format)));
             }
         }
-
     }
-
 }
