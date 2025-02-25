@@ -40,6 +40,7 @@ import org.xml.sax.SAXParseException;
 import de.intranda.goobi.plugins.validation.ValidateCardinality;
 import de.intranda.goobi.plugins.validation.ValidateDuplicatesInDocStrct;
 import de.intranda.goobi.plugins.validation.ValidateDuplicatesInGroups;
+import de.intranda.goobi.plugins.validation.ValidateFormats;
 import de.intranda.goobi.plugins.validation.ValidateUnusedButDefinedData;
 import de.intranda.goobi.plugins.xml.ReportErrorsErrorHandler;
 import de.intranda.goobi.plugins.xml.XMLError;
@@ -369,6 +370,8 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             validationErrors.addAll(v3.validate(root));
             ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
             validationErrors.addAll(v4.validate(root));
+            ValidateFormats v5 = new ValidateFormats();
+            validationErrors.addAll(v5.validate(root));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
