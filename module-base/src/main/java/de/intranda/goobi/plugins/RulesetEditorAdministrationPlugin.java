@@ -371,10 +371,10 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
             validationErrors.addAll(v4.validate(root));
             ValidateFormats v5 = new ValidateFormats();
-            validationErrors.addAll(v5.validate(root, "METS", "InternalName"));
-            validationErrors.addAll(v5.validate(root, "LIDO", "InternalName"));
-            validationErrors.addAll(v5.validate(root, "Marc", "Name"));
-            validationErrors.addAll(v5.validate(root, "PicaPlus", "Name"));
+            validationErrors.addAll(v5.validate(root, "METS"));
+            validationErrors.addAll(v5.validate(root, "LIDO"));
+            validationErrors.addAll(v5.validate(root, "Marc"));
+            validationErrors.addAll(v5.validate(root, "PicaPlus"));
 
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
@@ -386,11 +386,17 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             errorDescription = Helper.getTranslation("ruleset_validation_empty_translation");
             checkIssuesViaXPath(xpath, document, "//language[.='']/../Name", "ERROR", errorDescription);
 
-            // WARNING: defined twice
+            // WARNING: Metadata defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_metadata_defined_twice");
             checkIssuesViaXPath(xpath, document, "//MetadataType/Name[.=preceding::MetadataType/Name]", "WARNING", errorDescription);
+
+            // WARNING: DocStrctType defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_structure_data_defined_twice");
             checkIssuesViaXPath(xpath, document, "//DocStrctType/Name[.=preceding::DocStrctType/Name]", "WARNING", errorDescription);
+
+            // WARNING: Groups defined twice
+            errorDescription = Helper.getTranslation("ruleset_validation_group_defined_twice");
+            checkIssuesViaXPath(xpath, document, "//Group/Name[.=preceding::Group/Name]", "WARNING", errorDescription);
 
             // WARNING: allowedchildtype defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_allowedchildtype_defined_twice");

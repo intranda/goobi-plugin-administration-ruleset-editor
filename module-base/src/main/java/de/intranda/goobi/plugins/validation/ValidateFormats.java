@@ -22,14 +22,21 @@ public class ValidateFormats {
      * @param name This value is either "name" or "InternalName" depends on the format
      * @return A list of {@link XMLError} objects containing validation errors, if any.
      */
-    public List<XMLError> validate(Element root, String format, String name) {
+    public List<XMLError> validate(Element root, String format) {
         List<XMLError> errors = new ArrayList<>();
+        String name = "Name";
+        if (format.equals("METS") || format.equals("LIDO")) {
+            name = "InternalName";
+        }
         checkElements(root, errors, "DocStruct", "DocStrctType", format, name);
         checkElements(root, errors, "Metadata", "MetadataType", format, name);
 
         // In the following cases there is a <Person> value which also has to be checked
         if (format.equals("PicaPlus") || format.equals("Marc")) {
             checkElements(root, errors, "Person", "MetadataType", format, name);
+        }
+        if (format.equals("PicaPlus")) {
+            checkElements(root, errors, "Corporate", "MetadataType", format, name);
         }
         checkElements(root, errors, "Group", "Group", format, name);
         return errors;
@@ -54,6 +61,8 @@ public class ValidateFormats {
         for (Element element : Elements) {
             String formatName = element.getChild(name).getText().trim();
             XPathExpression<Element> xp1 = xpfac.compile("//" + definition + "[Name='" + formatName + "']", Filters.element());
+
+            // If the type is a Person, check if the MetadataType has a type attribute valued with "person"
             if (type.equals("Person")) {
                 XPathExpression<Element> xp2 = xpfac.compile("//MetadataType[@type='person' and Name='" + formatName + "']", Filters.element());
                 if (xp1.evaluate(root).size() < 1 && xp2.evaluate(root).size() < 1) {
@@ -61,8 +70,18 @@ public class ValidateFormats {
                             Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
                                     formatName, format)));
                 }
-
-            } else if (xp1.evaluate(root).size() < 1) {
+            }
+            // If the type is a Corporate, check if the MetadataType has a type attribute valued with "corporate"
+            if (type.equals("Corporate")) {
+                XPathExpression<Element> xp3 = xpfac.compile("//MetadataType[@type='corporate' and Name='" + formatName + "']", Filters.element());
+                if (xp1.evaluate(root).size() < 1 && xp3.evaluate(root).size() < 1) {
+                    errors.add(new XMLError("ERROR",
+                            Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
+                                    formatName, format)));
+                }
+            }
+            // If a value of a Metadata, Group or DocStrct is not defined above throw out an error
+            if (xp1.evaluate(root).size() < 1) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
                                 formatName, format)));
