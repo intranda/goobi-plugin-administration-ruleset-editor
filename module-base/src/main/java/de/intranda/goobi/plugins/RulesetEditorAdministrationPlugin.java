@@ -29,12 +29,19 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.goobi.beans.Ruleset;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IAdministrationPlugin;
+import org.jdom2.Element;
+import org.jdom2.input.DOMBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import de.intranda.goobi.plugins.validation.ValidateCardinality;
+import de.intranda.goobi.plugins.validation.ValidateDuplicatesInDocStrct;
+import de.intranda.goobi.plugins.validation.ValidateDuplicatesInGroups;
+import de.intranda.goobi.plugins.validation.ValidateFormats;
+import de.intranda.goobi.plugins.validation.ValidateUnusedButDefinedData;
 import de.intranda.goobi.plugins.xml.ReportErrorsErrorHandler;
 import de.intranda.goobi.plugins.xml.XMLError;
 import de.sub.goobi.config.ConfigPlugins;
@@ -354,6 +361,34 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             XPathFactory xPathFactory = XPathFactory.newInstance();
             XPath xpath = xPathFactory.newXPath();
 
+            // prepare jdom to execute several validations
+            DOMBuilder jdomBuilder = new DOMBuilder();
+            org.jdom2.Document jdomDocument = jdomBuilder.build(document);
+            Element root = jdomDocument.getRootElement();
+            
+            // check duplicates inside of Docstructs
+            ValidateDuplicatesInDocStrct v1 = new ValidateDuplicatesInDocStrct();
+            validationErrors.addAll(v1.validate(root));
+            
+            // check duplicates inside of Groups
+            ValidateDuplicatesInGroups v2 = new ValidateDuplicatesInGroups();
+            validationErrors.addAll(v2.validate(root));
+            
+            // check values in num-attribute
+            ValidateCardinality v3 = new ValidateCardinality();
+            validationErrors.addAll(v3.validate(root));
+            
+            // check the usage of undefined elements
+            ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
+            validationErrors.addAll(v4.validate(root));
+            
+            // check formats for undefined elements
+            ValidateFormats v5 = new ValidateFormats();
+            validationErrors.addAll(v5.validate(root, "METS"));
+            validationErrors.addAll(v5.validate(root, "LIDO"));
+            validationErrors.addAll(v5.validate(root, "Marc"));
+            validationErrors.addAll(v5.validate(root, "PicaPlus"));
+
             // ERROR: undefined but used
             String errorDescription = Helper.getTranslation("ruleset_validation_undefined_metadata_but_used");
             checkIssuesViaXPath(xpath, document, "//metadata[not(.=//MetadataType/Name)]", "ERROR", errorDescription);
@@ -364,18 +399,17 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             errorDescription = Helper.getTranslation("ruleset_validation_empty_translation");
             checkIssuesViaXPath(xpath, document, "//language[.='']/../Name", "ERROR", errorDescription);
 
-            // ERROR: metadata used twice inside of structure element
-            errorDescription = Helper.getTranslation("ruleset_validation_metadata_used_twice_inside_of_structure_element");
-            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]",
-                    "ERROR", errorDescription);
-            checkIssuesViaXPath(xpath, document, "//DocStrctType/metadata[.=preceding-sibling::metadata]/../Name", "ERROR",
-                    errorDescription);
-
-            // WARNING: defined twice
+            // WARNING: Metadata defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_metadata_defined_twice");
             checkIssuesViaXPath(xpath, document, "//MetadataType/Name[.=preceding::MetadataType/Name]", "WARNING", errorDescription);
+
+            // WARNING: DocStrctType defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_structure_data_defined_twice");
             checkIssuesViaXPath(xpath, document, "//DocStrctType/Name[.=preceding::DocStrctType/Name]", "WARNING", errorDescription);
+
+            // WARNING: Groups defined twice
+            errorDescription = Helper.getTranslation("ruleset_validation_group_defined_twice");
+            checkIssuesViaXPath(xpath, document, "//Group/Name[.=preceding::Group/Name]", "WARNING", errorDescription);
 
             // WARNING: allowedchildtype defined twice
             errorDescription = Helper.getTranslation("ruleset_validation_allowedchildtype_defined_twice");
