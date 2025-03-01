@@ -71,6 +71,7 @@ public class ValidateFormats {
                                     formatName, format)));
                 }
             }
+            
             // If the type is a Corporate, check if the MetadataType has a type attribute valued with "corporate"
             if (type.equals("Corporate")) {
                 XPathExpression<Element> xp3 = xpfac.compile("//MetadataType[@type='corporate' and Name='" + formatName + "']", Filters.element());
@@ -80,11 +81,14 @@ public class ValidateFormats {
                                     formatName, format)));
                 }
             }
+            
             // If a value of a Metadata, Group or DocStrct is not defined above throw out an error
-            if (xp1.evaluate(root).size() < 1) {
-                errors.add(new XMLError("ERROR",
-                        Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
-                                formatName, format)));
+            if (!type.equals("Person") && !type.equals("Corporate")) {
+	            if (xp1.evaluate(root).size() < 1) {
+	                errors.add(new XMLError("ERROR",
+	                        Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
+	                                formatName, format)));
+	            }
             }
         }
     }

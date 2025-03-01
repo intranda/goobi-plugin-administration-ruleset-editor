@@ -329,6 +329,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     private List<XMLError> checkXMLWellformed(String xml) throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setValidating(false);
         factory.setNamespaceAware(true);
 
@@ -347,6 +348,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
 
     private void checkRulesetValid(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setValidating(false);
         factory.setNamespaceAware(true);
 
@@ -359,17 +361,28 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
             XPathFactory xPathFactory = XPathFactory.newInstance();
             XPath xpath = xPathFactory.newXPath();
 
+            // prepare jdom to execute several validations
             DOMBuilder jdomBuilder = new DOMBuilder();
             org.jdom2.Document jdomDocument = jdomBuilder.build(document);
             Element root = jdomDocument.getRootElement();
+            
+            // check duplicates inside of Docstructs
             ValidateDuplicatesInDocStrct v1 = new ValidateDuplicatesInDocStrct();
             validationErrors.addAll(v1.validate(root));
+            
+            // check duplicates inside of Groups
             ValidateDuplicatesInGroups v2 = new ValidateDuplicatesInGroups();
             validationErrors.addAll(v2.validate(root));
+            
+            // check values in num-attribute
             ValidateCardinality v3 = new ValidateCardinality();
             validationErrors.addAll(v3.validate(root));
+            
+            // check the usage of undefined elements
             ValidateUnusedButDefinedData v4 = new ValidateUnusedButDefinedData();
             validationErrors.addAll(v4.validate(root));
+            
+            // check formats for undefined elements
             ValidateFormats v5 = new ValidateFormats();
             validationErrors.addAll(v5.validate(root, "METS"));
             validationErrors.addAll(v5.validate(root, "LIDO"));

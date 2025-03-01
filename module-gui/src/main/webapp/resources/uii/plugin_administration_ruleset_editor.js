@@ -2,7 +2,7 @@ var rulesetEditor;
 var debug = false;
 
 function initRulesetEditor() {
-	var rulesetTextArea = document.getElementById("rulesetEditor");
+	var rulesetTextArea = document.getElementById("rulesetEditorForm:contentbox:rulesetEditor");
 	if (rulesetTextArea) {
 		rulesetEditor = CodeMirror.fromTextArea(rulesetTextArea, {
 			lineNumbers: true,
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
   //stickyBoxes();
 });
 
-jsf.ajax.addOnEvent( function( data ) {
+faces.ajax.addOnEvent( function( data ) {
     if (data.status == "success"){
 		//stickyBoxes();
 	}    
