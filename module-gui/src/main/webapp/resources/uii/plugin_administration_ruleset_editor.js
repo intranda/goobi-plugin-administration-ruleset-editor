@@ -18,17 +18,17 @@ function initRulesetEditor() {
 	}
 }
 
-function loadEditorContent() {
+function loadRulesetEditorContent() {
 	var rulesetTextAreaBase64 = document.getElementById("rulesetEditorForm:contentbox:rulesetEditorBase64");
 	let string = rulesetEditor.getValue();
 	if (debug){
 	  // console.log("Load: " + string);
 	}
-	rulesetTextAreaBase64.value = base64EncodeUnicode(string);
+	rulesetTextAreaBase64.value = base64EncodeUnicodeRuleset(string);
 }
 
-function base64EncodeUnicode(str) {
-	// Firstly, escape the string using encodeURIComponent to get the UTF-8 encoding of the characters, 
+function base64EncodeUnicodeRuleset(str) {
+	// Firstly, escape the string using encodeURIComponent to get the UTF-8 encoding of the characters,
 	// Secondly, we convert the percent encodings into raw bytes, and add it to btoa() function.
 	utf8Bytes = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
 		return String.fromCharCode('0x' + p1);
@@ -36,12 +36,12 @@ function base64EncodeUnicode(str) {
 	return btoa(utf8Bytes);
 }
 
-function loadEditorContentAndInit() {
-	loadEditorContent();
+function loadRulesetEditorContentAndInit() {
+	loadRulesetEditorContent();
 	initRulesetEditor();
 }
 
-function stickyBoxes() {
+function stickyRulesetBoxes() {
 	var heightLeft = document.getElementById('leftarea').children[0].clientHeight;
 	var heightRight = document.getElementById('rightarea').children[0].clientHeight;
 	if (debug){
@@ -50,7 +50,7 @@ function stickyBoxes() {
 	}
 	document.getElementById('leftarea').style.height = heightLeft + 2 + "px";
 	document.getElementById('rightarea').style.height = heightRight + 2 + "px";
-	
+
 	var Sticky = new hcSticky('#leftarea', {
     	stickTo: '#rightarea',
     	responsive: {
@@ -59,18 +59,18 @@ function stickyBoxes() {
 		    }
 		  }
 	});
-	
+
 	if (debug){
-		console.log("stickyBoxes was called ");
+		console.log("stickyRulesetBoxes was called ");
 	}
 }
-	
+
 document.addEventListener('DOMContentLoaded', function() {
-  //stickyBoxes();
+  //stickyRulesetBoxes();
 });
 
 faces.ajax.addOnEvent( function( data ) {
     if (data.status == "success"){
-		//stickyBoxes();
-	}    
+		//stickyRulesetBoxes();
+	}
 });
