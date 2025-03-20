@@ -130,7 +130,8 @@
                         <intranda:box
                             boxType="outline"
                             boxPadding="true"
-                            boxTitle="false">
+                            boxTitle="false"
+							id="validationResults">
 
                             <intranda:boxTitle
                                 title="#{msgs.plugin_administration_ruleset_editor_validation_result}"
@@ -144,7 +145,7 @@
                                         jsf:action="#{AdministrationForm.administrationPlugin.toggleShowMore}"
                                         title="#{AdministrationForm.administrationPlugin.showMore ? msgs.ruleset_validation_show_more : msgs.ruleset_validation_show_less}">
                                         <i class="fa #{AdministrationForm.administrationPlugin.showMore ? 'fa-angle-up' : 'fa-angle-down'}"></i>
-                                        <f:ajax render="rulesetEditorForm" />
+                                        <f:ajax render="validationResults" />
                                     </button>
                                 </div>
                             </intranda:boxTitle>
