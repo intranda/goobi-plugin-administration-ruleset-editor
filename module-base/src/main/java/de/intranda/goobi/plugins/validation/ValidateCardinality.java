@@ -40,8 +40,6 @@ public class ValidateCardinality {
         List<Element> childElements = element.getChildren();
         Element nameElement = element.getChild("Name");
         for (Element childElement : childElements) {
-            String lineNumber = childElement.getAttributeValue("lineNumber");
-            String lineInfo = (lineNumber != null) ? lineNumber.trim() : "0";
             // Skip elements that are not "group" or "metadata"
             if (!"group".equals(childElement.getName()) && !"metadata".equals(childElement.getName())) {
                 continue;
@@ -51,7 +49,7 @@ public class ValidateCardinality {
                     && !"+".equals(attributeValue)) {
                 errors.add(new XMLError("ERROR",
                         Helper.getTranslation("ruleset_validation_wrong_cardinality", childElement.getText(), nameElement.getText(),
-                                attributeValue), lineInfo));
+                                attributeValue)));
             }
         }
     }

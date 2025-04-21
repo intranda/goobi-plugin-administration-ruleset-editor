@@ -52,21 +52,18 @@ public class ValidateDuplicatesInGroups {
             String childText = childElement.getText().trim();
             String childSignature = childName + ":" + childText;
 
-            String lineNumber = childElement.getAttributeValue("lineNumber");
-            String lineInfo = (lineNumber != null) ? lineNumber.trim() : "0";
-
             if (valueSet.contains(childSignature)) {
 
                 // Check if the child element name is "metadata"
                 if ("metadata".equals(childName)) {
-                    findMetadataType(errors, root, childText, nameText, lineInfo);
+                    findMetadataType(errors, root, childText, nameText);
                 }
                 // Check if the child element name is "group"
                 else if ("group".equals(childName)) {
                     errors.add(
                             new XMLError("ERROR",
                                     Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childText,
-                                            nameText),lineInfo));
+                                            nameText)));
                 }
             } else {
                 // Add the signature to the set
@@ -84,7 +81,7 @@ public class ValidateDuplicatesInGroups {
      * @param childElementText
      * @param nameElementText
      */
-    private void findMetadataType(List<XMLError> errors, Element root, String childElementText, String nameElementText, String lineInfo) {
+    private void findMetadataType(List<XMLError> errors, Element root, String childElementText, String nameElementText) {
 
         for (Element element : root.getChildren()) {
 
@@ -97,18 +94,18 @@ public class ValidateDuplicatesInGroups {
             // Check if the element is a person with the same name 
             if ("person".equals(element.getAttributeValue("type")) && childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
-                        Helper.getTranslation("ruleset_validation_duplicates_group_person", childElementText, nameElementText), lineInfo));
+                        Helper.getTranslation("ruleset_validation_duplicates_group_person", childElementText, nameElementText)));
                 return;
             }
 
             if ("corporate".equals(element.getAttributeValue("type")) && childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
-                        Helper.getTranslation("ruleset_validation_duplicates_group_corporate", childElementText, nameElementText), lineInfo));
+                        Helper.getTranslation("ruleset_validation_duplicates_group_corporate", childElementText, nameElementText)));
                 return;
 
             } else if (childElementText.equals(nameChild.getText().trim())) {
                 errors.add(new XMLError("ERROR",
-                        Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElementText, nameElementText), lineInfo));
+                        Helper.getTranslation("ruleset_validation_duplicates_group_metadata", childElementText, nameElementText)));
                 return;
             }
 

@@ -11,10 +11,10 @@ public class XMLError {
     private String severity;
     private String message;
 
-    public XMLError(String severity, String message, String line) {
+    public XMLError(String severity, String message) {
         this.severity = severity;
         this.message = message;
-        this.line = Integer.parseInt(line);
+        line = 0;
         column = 0;
     }
 }
