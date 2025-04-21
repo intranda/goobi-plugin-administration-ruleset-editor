@@ -32,13 +32,14 @@ public class ValidateUnusedButDefinedData {
             // Go through all children of the element and search for unused values
             searchInDocstrctTypesForUnusedValues(errors, element, allMetadataTypeNameValues, allAllowedchildtypeValues);
         }
-
         // Add all unused values to the errors list
         for (String unusedValue : allMetadataTypeNameValues) {
             findMetadataType(errors, root, unusedValue);
         }
         for (String unusedValue : allAllowedchildtypeValues) {
             for (Element element : root.getChildren()) {
+                String lineNumber = element.getAttributeValue("lineNumber");
+                String lineInfo = (lineNumber != null) ? lineNumber.trim() : "0";
                 // Check if the element is a DocStrctType and if the Name value is inside the allAllowedchildtypeValues. 
                 // If so it will be added to allUnusedAllowedchildtypeValues and a message will be displayed 
                 if ("DocStrctType".equals(element.getName())
@@ -46,7 +47,7 @@ public class ValidateUnusedButDefinedData {
                         && !allUnusedAllowedchildtypeValues.contains(unusedValue)) {
                     allUnusedAllowedchildtypeValues.add(unusedValue.trim());
                     errors.add(new XMLError("WARNING", Helper.getTranslation("ruleset_validation_unused_values_allowedchildtype",
-                            unusedValue.substring(unusedValue.lastIndexOf(":") + 1))));
+                            unusedValue.substring(unusedValue.lastIndexOf(":") + 1)), lineInfo));
                 }
             }
         }
@@ -119,7 +120,6 @@ public class ValidateUnusedButDefinedData {
             // Group used in same group
             if ("Group".equals(element.getName())) {
                 if ("group".equals(childElement.getName()) && allMetadataTypeNameValues.contains("Group:" + childElement.getText().trim())) {
-
                     allMetadataTypeNameValues.remove("Group:" + childElement.getText().trim());
                 }
             }
@@ -148,26 +148,28 @@ public class ValidateUnusedButDefinedData {
                 if (nameChild != null && nameChild.getText() != null && !nameChild.getText().trim().isEmpty()) {
                     String type = element.getAttributeValue("type");
                     String nameText = nameChild.getText().trim();
+                    String lineNumber = nameChild.getAttributeValue("lineNumber");
+                    String lineInfo = (lineNumber != null) ? lineNumber.trim() : "0";
 
                     if ("person".equals(type) && text.equals("MetadataType:" + nameText)) {
                         errors.add(new XMLError("WARNING",
-                                Helper.getTranslation("ruleset_validation_unused_values_person", text.substring(text.lastIndexOf(":") + 1))));
+                                Helper.getTranslation("ruleset_validation_unused_values_person", text.substring(text.lastIndexOf(":") + 1)), lineInfo));
                         continue;
                     }
 
                     if ("corporate".equals(type) && text.equals("MetadataType:" + nameText)) {
                         errors.add(new XMLError("WARNING",
-                                Helper.getTranslation("ruleset_validation_unused_values_corporate", text.substring(text.lastIndexOf(":") + 1))));
+                                Helper.getTranslation("ruleset_validation_unused_values_corporate", text.substring(text.lastIndexOf(":") + 1)), lineInfo));
                         continue;
                     }
 
-                    if ("Group".equals("Group:" + nameText)) {
+                    if (text.equals("Group:" + nameText)) {
                         errors.add(new XMLError("WARNING",
-                                Helper.getTranslation("ruleset_validation_unused_values_groups", text.substring(text.lastIndexOf(":") + 1))));
+                                Helper.getTranslation("ruleset_validation_unused_values_groups", text.substring(text.lastIndexOf(":") + 1)), lineInfo));
                         continue;
                     } else if (text.equals("MetadataType:" + nameText)) {
                         errors.add(new XMLError("WARNING",
-                                Helper.getTranslation("ruleset_validation_unused_values_metadata", text.substring(text.lastIndexOf(":") + 1))));
+                                Helper.getTranslation("ruleset_validation_unused_values_metadata", text.substring(text.lastIndexOf(":") + 1)),lineInfo));
                         continue;
                     }
                 }

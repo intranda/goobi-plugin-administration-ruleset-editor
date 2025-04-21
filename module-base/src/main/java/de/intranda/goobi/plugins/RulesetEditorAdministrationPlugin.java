@@ -1,5 +1,6 @@
 package de.intranda.goobi.plugins;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
@@ -347,6 +348,35 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
     }
 
     private void checkRulesetValid(String xml) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    	int lineNumber = 1;
+    	BufferedReader reader = new BufferedReader(new StringReader(xml));
+    	StringBuilder xmlWithLineNumbers = new StringBuilder();
+    	String line;
+    	while ((line = reader.readLine()) != null) {
+    	    String trimmedLine = line.trim();
+    	    // If the line starts with a < and not a </ and ist not the first line of the xml, append a lineNumber String before 
+    	    // the first >, but there can be a /> which has to be checked
+    	    if (trimmedLine.startsWith("<") && !trimmedLine.startsWith("</") && !trimmedLine.startsWith("<!--")&& lineNumber!= 1) {
+    	        int indexOfClosingBracket = line.indexOf(">");
+    	        
+    	        if (indexOfClosingBracket > 0 && line.charAt(indexOfClosingBracket - 1) == '/') {
+    	            String before = line.substring(0, indexOfClosingBracket - 1);
+    	            String after = line.substring(indexOfClosingBracket - 1);
+    	            line = before + " lineNumber=\"" + lineNumber + "\"" + after;
+    	        } else if (line.trim().startsWith("<") && !line.trim().startsWith("</") && !line.trim().startsWith("<!--")) {
+    	            String before = line.substring(0, indexOfClosingBracket);
+    	            String after = line.substring(indexOfClosingBracket); 
+    	            line = before + " lineNumber=\"" + lineNumber + "\"" + after;
+    	        }
+    	    }
+    	    
+    	    xmlWithLineNumbers.append(line).append("\n");
+    	    lineNumber++;
+    	}
+    	String modifiedXml = xmlWithLineNumbers.toString();
+    	
+    	
+    	
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setValidating(false);
@@ -356,7 +386,7 @@ public class RulesetEditorAdministrationPlugin implements IAdministrationPlugin 
         ReportErrorsErrorHandler eh = new ReportErrorsErrorHandler();
         builder.setErrorHandler(eh);
 
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(modifiedXml.getBytes(StandardCharsets.UTF_8))) {
             Document document = builder.parse(bais);
             XPathFactory xPathFactory = XPathFactory.newInstance();
             XPath xpath = xPathFactory.newXPath();

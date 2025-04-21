@@ -60,6 +60,8 @@ public class ValidateFormats {
         // run through all elements in formats section
         for (Element element : Elements) {
             String formatName = element.getChild(name).getText().trim();
+            String lineNumber = element.getAttributeValue("lineNumber");
+            String lineInfo = (lineNumber != null) ? lineNumber.trim() : "0";
             XPathExpression<Element> xp1 = xpfac.compile("//" + definition + "[Name='" + formatName + "']", Filters.element());
 
             // If the type is a Person, check if the MetadataType has a type attribute valued with "person"
@@ -68,7 +70,7 @@ public class ValidateFormats {
                 if (xp1.evaluate(root).size() < 1 && xp2.evaluate(root).size() < 1) {
                     errors.add(new XMLError("ERROR",
                             Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
-                                    formatName, format)));
+                                    formatName, format),lineInfo));
                 }
             }
             
@@ -78,7 +80,7 @@ public class ValidateFormats {
                 if (xp1.evaluate(root).size() < 1 && xp3.evaluate(root).size() < 1) {
                     errors.add(new XMLError("ERROR",
                             Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
-                                    formatName, format)));
+                                    formatName, format), lineInfo));
                 }
             }
             
@@ -87,7 +89,7 @@ public class ValidateFormats {
 	            if (xp1.evaluate(root).size() < 1) {
 	                errors.add(new XMLError("ERROR",
 	                        Helper.getTranslation("ruleset_validation_used_but_undefined_" + type.toLowerCase() + "_for_export",
-	                                formatName, format)));
+	                                formatName, format), lineInfo));
 	            }
             }
         }
