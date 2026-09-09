@@ -2,7 +2,7 @@
 title: Regelsatzeditor
 identifier: intranda_administration_ruleset_editor
 description: Dies ist ein Administration Plugin für Goobi workflow. Es ermöglicht die Bearbeitung von Ruleset-Dateien direkt aus der Benutzeroberfläche.
-published: true
+published: false
 ---
 ## Einführung
 Dieses Plugin dient zur direkten Bearbeitung der Regelsatzdateien von Goobi workflow direkt aus der Benutzeroberfläche innerhalb des Webbrowsers.
