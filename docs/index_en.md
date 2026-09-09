@@ -2,7 +2,7 @@
 title: Ruleset editor
 identifier: intranda_administration_ruleset_editor
 description: This is an Administration Plugin for Goobi workflow. It allows to edit ruleset xml files directly from the user interface.
-published: true
+published: false
 ---
 ## Introduction
 This plugin is used to directly edit the ruleset files of Goobi workflow directly from the user interface within the web browser.
